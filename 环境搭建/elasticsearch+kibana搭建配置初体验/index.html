@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+<title>elasticsearch+kibana搭建配置初体验 - JF &#39; blog</title>
+<meta name="keywords" content="hexo,hexone">
+<meta name="description" content="a theme based on bootstrap">
+<meta name="author" content="John Doe">
+<meta name="generator" content="hexo">
+<meta name="jsonContent" content="/content.json">
+
+<link rel="alternate" href="/atom.xml" title="JF ' blog">
+
+<!-- Bootstrap -->
+<link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+<link rel="stylesheet" href="/css/style.css">
+
+  <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+  <!--[if lt IE 9]>
+    <script src="https://cdn.bootcss.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <script src="https://cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+<link rel="alternate" href="/atom.xml" title="JF ' blog" type="application/atom+xml">
+</head>
+<body class="bg">
+  <div class="container">
+    <header id="header" class="header">
+    <div class="site-info hidden-xs">
+        <p class="title">JF &#39; blog</p>
+        <p></p>
+        <p class="lead">Information is beautiful</p>
+        <!--<p class="subtitle">Information is beautiful</p>-->
+        <!--<p class="author">by John Doe</p>-->
+    </div>
+    <div class="nav-box">
+        <nav id="navbar" class="navbar navbar-inverse">
+            <div class="navbar-inner">
+                <div class="container">
+                    <!-- Brand and toggle get grouped for better mobile display -->
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#hexone-navbar-collapse" aria-expanded="false">
+                            <span class="sr-only">Toggle navigation</span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a href="/" class="navbar-brand visible-xs-inline">JF &#39; blog</a>
+                    </div>
+
+                    <!-- Collect the nav links, forms, and other content for toggling -->
+                    <div class="collapse navbar-collapse">
+                        <ul class="nav navbar-nav">
+                            
+                                
+                                    <li class><a href="/">首页</a></li>
+                                
+                                <li class="divider-vertical"></li>
+                            
+                                
+                                    <li class><a href="/archives">归档</a></li>
+                                
+                                <li class="divider-vertical"></li>
+                            
+                                
+                                    <li class><a href="/about.html">关于</a></li>
+                                
+                                <li class="divider-vertical"></li>
+                            
+                                
+                                    <li class="active"><a>elasticsearch+kibana搭建配置初体验</a></li>
+                                
+                                <li class="divider-vertical"></li>
+                            
+                        </ul>
+                    </div>
+                </div><!-- /.navbar-collapse -->
+            </div><!-- /.container-fluid -->
+        </nav>
+    </div>
+</header>
+    <div class="row">
+      <section id="main" class="col-md-9 main">
+<article id="post-环境搭建/elasticsearch+kibana搭建配置初体验" class="article">
+  
+    <h1 class="title"><a href="/%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/elasticsearch+kibana%E6%90%AD%E5%BB%BA%E9%85%8D%E7%BD%AE%E5%88%9D%E4%BD%93%E9%AA%8C/">elasticsearch+kibana搭建配置初体验</a></h1>
+  
+    <p class="info">
+  <span class="info-item">日期: <a href="/archives/2019/08" class="date" title="11:17:48">2019-08-01</a></span>
+  <span class="info-item">更新: <a href="javascript: void(0)" class="date" title="19:37:21">2020-04-07</a></span>
+  <span class="info-item">分类: <a class="category-link" href="/categories/%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/">环境搭建</a></span>
+</p>
+  
+    <div class="content">
+  <p>最近分析一些日志，搭建elasticsearch+kibana玩一玩。</p>
+<h2 id="0x00-环境准备"><a href="#0x00-环境准备" class="headerlink" title="0x00 环境准备"></a>0x00 环境准备</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">ubuntu 18.04(不用docker推荐使用centos装)</span><br><span class="line"></span><br><span class="line">docker --version</span><br><span class="line">Docker version 18.09.7, build 2d0083d</span><br></pre></td></tr></table></figure>
+<h2 id="0x00-环境搭建"><a href="#0x00-环境搭建" class="headerlink" title="0x00 环境搭建"></a>0x00 环境搭建</h2><h3 id="1-Docker"><a href="#1-Docker" class="headerlink" title="1. Docker"></a>1. Docker</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">apt install docker.io</span><br><span class="line">sudo systemctl start docker</span><br><span class="line">sudo systemctl <span class="built_in">enable</span> docker</span><br></pre></td></tr></table></figure>
+<h4 id="docker代理"><a href="#docker代理" class="headerlink" title="docker代理"></a>docker代理</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo mkdir -p /etc/systemd/system/docker.service.d</span><br></pre></td></tr></table></figure>
+<p>在服务目录下新建代理配置文件并添加内容<br>NO_PROXY是不需要代理的地址，比如本地及本地私有仓库等</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">vi /etc/systemd/system/docker.service.d/http-proxy.conf</span><br><span class="line"></span><br><span class="line">[Service]  Environment=<span class="string">"HTTP_PROXY=http://ip:port/"</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="2-portainer"><a href="#2-portainer" class="headerlink" title="2. portainer"></a>2. portainer</h3><p>docker可视化工具portainer<br><a href="https://www.portainer.io/installation/" target="_blank" rel="external nofollow noopener noreferrer">https://www.portainer.io/installation/</a></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ docker volume create portainer_data</span><br><span class="line">$ docker run -d -p 8000:8000 -p 9000:9000 -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-elasticsearch"><a href="#3-elasticsearch" class="headerlink" title="3. elasticsearch"></a>3. elasticsearch</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker pull elasticsearch:7.2.0</span><br></pre></td></tr></table></figure>
+<p>注：7.2没有type概念，以索引为主，开发者认为不应该把elasticsearch当作单纯数据库看待</p>
+<p>访问可视化工具-&gt;volumns模块<br>创建本地卷永久存放elasticsearch日志，数据，配置目录：<br><img src="/images/2019/08/4161514289.png" alt></p>
+<h4 id="3-1-设置卷映射"><a href="#3-1-设置卷映射" class="headerlink" title="3.1 设置卷映射"></a>3.1 设置卷映射</h4><p>/usr/share/elasticsearch/data -&gt; es_data<br>/usr/share/elasticsearch/config -&gt; es_config</p>
+<h4 id="3-2-设置端口映射"><a href="#3-2-设置端口映射" class="headerlink" title="3.2 设置端口映射"></a>3.2 设置端口映射</h4><p><img src="/images/2019/08/381385496.png" alt></p>
+<h4 id="3-3-设置单机模式（参考hub）"><a href="#3-3-设置单机模式（参考hub）" class="headerlink" title="3.3 设置单机模式（参考hub）"></a>3.3 设置单机模式（参考hub）</h4><p><a href="https://hub.docker.com/_/elasticsearch" target="_blank" rel="external nofollow noopener noreferrer">https://hub.docker.com/_/elasticsearch</a></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">discovery.type=single-node</span><br></pre></td></tr></table></figure>
+<p><img src="/images/2019/08/1819320056.png" alt></p>
+<h4 id="3-4-修改elasticsearch配置文件"><a href="#3-4-修改elasticsearch配置文件" class="headerlink" title="3.4 修改elasticsearch配置文件"></a>3.4 修改elasticsearch配置文件</h4><p>修改完后启动</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">/var/lib/docker/volumes/es_config/_data<span class="comment"># </span></span><br><span class="line">cat elasticsearch.yml</span><br><span class="line">cluster.name: <span class="string">"docker-cluster"</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 设置局域网可外连</span></span><br><span class="line">network.host: 0.0.0.0</span><br><span class="line"></span><br><span class="line"><span class="comment"># 设置写入缓存清理和限制</span></span><br><span class="line">indices.fielddata.cache.size: 75%</span><br><span class="line">indices.breaker.fielddata.limit: 85%</span><br><span class="line"></span><br><span class="line"><span class="comment"># 设置外连否则es会拒绝跨域和一些不允许方法</span></span><br><span class="line">http.cors.enabled: <span class="literal">true</span></span><br><span class="line">http.cors.allow-origin: <span class="string">"*"</span></span><br><span class="line">http.cors.allow-methods: OPTIONS, HEAD, GET, POST, PUT, DELETE</span><br><span class="line">http.cors.allow-headers: X-Requested-With, Content-Type, Content-Length, X-User</span><br></pre></td></tr></table></figure>
+<h4 id="3-5-测试访问"><a href="#3-5-测试访问" class="headerlink" title="3.5 测试访问"></a>3.5 测试访问</h4><p><img src="/images/2019/08/4067205480.png" alt></p>
+<h4 id="3-6-安装中文ik分词插件"><a href="#3-6-安装中文ik分词插件" class="headerlink" title="3.6 安装中文ik分词插件"></a>3.6 安装中文ik分词插件</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> /usr/share/elasticsearch/plugins</span><br><span class="line">mkdir ik</span><br><span class="line">curl -O https://github.com/medcl/elasticsearch-analysis-ik/releases/download/v7.2.0/elasticsearch-analysis-ik-7.2.0.zip</span><br><span class="line">docker restart [docker-id]</span><br></pre></td></tr></table></figure>
+<h3 id="4-kibana搭建"><a href="#4-kibana搭建" class="headerlink" title="4. kibana搭建"></a>4. kibana搭建</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">docker pull kibana:7.2.0</span><br><span class="line"></span><br><span class="line">port map :5601</span><br><span class="line">/usr/share/kibana/config -&gt; kibana_config(本地卷)</span><br></pre></td></tr></table></figure>
+
+<h4 id="4-1-修改配置"><a href="#4-1-修改配置" class="headerlink" title="4.1 修改配置"></a>4.1 修改配置</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">/var/lib/docker/volumes/kibana_config/_data<span class="comment"># cat kibana.yml</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment"># ** THIS IS AN AUTO-GENERATED FILE **</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Default Kibana configuration for docker target</span></span><br><span class="line">server.name: kibana</span><br><span class="line">server.host: <span class="string">"0"</span></span><br><span class="line"><span class="comment"># 配置host</span></span><br><span class="line">elasticsearch.hosts: [ <span class="string">"http://192.168.123.135:9200"</span> ]</span><br><span class="line">xpack.monitoring.ui.container.elasticsearch.enabled: <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 设置日志存放</span></span><br><span class="line">logging.dest: /usr/share/kibana/config/kibana-log.txt</span><br></pre></td></tr></table></figure>
+<h4 id="4-2-测试启动"><a href="#4-2-测试启动" class="headerlink" title="4.2 测试启动"></a>4.2 测试启动</h4><p><img src="/images/2019/08/4194996919.png" alt></p>
+<h2 id="0X04-es常用语句"><a href="#0X04-es常用语句" class="headerlink" title="0X04 es常用语句"></a>0X04 es常用语句</h2><p>以下语句均为7.2环境</p>
+<h3 id="1-1-新增索引"><a href="#1-1-新增索引" class="headerlink" title="1.1 新增索引"></a>1.1 新增索引</h3><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">PUT test1</span><br><span class="line">&#123;</span><br><span class="line">    "mappings" : &#123;</span><br><span class="line">        "properties" : &#123;</span><br><span class="line">            "field1" : &#123; "type" : "text" &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="1-2-新增分词索引"><a href="#1-2-新增分词索引" class="headerlink" title="1.2 新增分词索引"></a>1.2 新增分词索引</h3><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">PUT data1</span><br><span class="line">&#123;</span><br><span class="line">  "settings":&#123;</span><br><span class="line">      "analysis":&#123;</span><br><span class="line">         "analyzer":&#123;</span><br><span class="line">            "email_analyzer":&#123; </span><br><span class="line">               "tokenizer":"standard",</span><br><span class="line">               "filter":[</span><br><span class="line">                  "lowercase"</span><br><span class="line">               ]</span><br><span class="line">            &#125;</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    "mappings" : &#123;</span><br><span class="line">        "properties" : &#123;</span><br><span class="line">            "username" : &#123;                 </span><br><span class="line">              "type": "text",</span><br><span class="line">              "analyzer": "ik_max_word",</span><br><span class="line">              "search_analyzer": "ik_smart"</span><br><span class="line">            &#125;,</span><br><span class="line">            "email":&#123;</span><br><span class="line">              "type": "text",</span><br><span class="line">              "analyzer": "email_analyzer",</span><br><span class="line">              "search_analyzer": "email_analyzer"</span><br><span class="line">            &#125;,            </span><br><span class="line">            "sex":&#123;</span><br><span class="line">              "type": "keyword"</span><br><span class="line">            &#125;,</span><br><span class="line">            "address" : &#123;                 </span><br><span class="line">              "type": "text",</span><br><span class="line">              "analyzer": "ik_max_word",</span><br><span class="line">              "search_analyzer": "ik_smart"</span><br><span class="line">            &#125;,</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="1-3-查看索引"><a href="#1-3-查看索引" class="headerlink" title="1.3 查看索引"></a>1.3 查看索引</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://10.10.10.10:9200/_cat/indices</span><br></pre></td></tr></table></figure>
+
+<h3 id="1-4-查看数据"><a href="#1-4-查看数据" class="headerlink" title="1.4 查看数据"></a>1.4 查看数据</h3><p>查看test1索引下序号为1的数据</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">GET test1/_doc/1</span><br></pre></td></tr></table></figure>
+<h3 id="1-5-搜索数据"><a href="#1-5-搜索数据" class="headerlink" title="1.5 搜索数据"></a>1.5 搜索数据</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http:&#x2F;&#x2F;10.10.10.10:9200&#x2F;hello&#x2F;_search?pretty&amp;size&#x3D;50&amp;from&#x3D;50</span><br></pre></td></tr></table></figure>
+
+<h3 id="1-6-范围删除"><a href="#1-6-范围删除" class="headerlink" title="1.6 范围删除"></a>1.6 范围删除</h3><p>删除data1索引下_seq_no序号大于等于50的数据</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">POST data1/_delete_by_query</span><br><span class="line">&#123;</span><br><span class="line">  "query": &#123;</span><br><span class="line">    "range" : &#123;</span><br><span class="line">        "_seq_no" : &#123;</span><br><span class="line">           "gte" : 50</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="1-7-group-by查询"><a href="#1-7-group-by查询" class="headerlink" title="1.7 group by查询"></a>1.7 group by查询</h3><p>检索处所有source字段</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">GET data1/_search</span><br><span class="line">&#123;</span><br><span class="line">  "aggs":&#123;</span><br><span class="line">    "models":&#123;</span><br><span class="line">      "terms":&#123;</span><br><span class="line">        "field":"source"</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="0X05-es常用语句"><a href="#0X05-es常用语句" class="headerlink" title="0X05 es常用语句"></a>0X05 es常用语句</h2><p>Bulk 批量插入</p>
+<p>Mysql To Elasticsearch</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">https://blog.csdn.net/weixin_39198406/article/details/82983256</span><br></pre></td></tr></table></figure>
+
+<h2 id="0X06-异常报错"><a href="#0X06-异常报错" class="headerlink" title="0X06 异常报错"></a>0X06 异常报错</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ELASTICSEARCH CIRCUITBREAKINGEXCEPTION FIELDDATA DATA TOO LARGE</span><br></pre></td></tr></table></figure>
+<p>尝试添加文章中配置文件限制cache的配置<br>其次top看一下内存占用，应该是不够用了。</p>
+
+</div>
+  
+    <div class="copyright">
+    <p>如无特殊说明，均为原创内容。转载请注明出处！</p>
+</div>
+  
+    
+  
+    
+  <nav aria-label="pager" class="nav-pager">
+    <ul class="pager">
+      
+        <li class="previous"><a href="/%E6%B8%97%E9%80%8F%E5%B7%A5%E5%85%B7/Burp%20suite%E6%8F%92%E4%BB%B6%E8%8E%B7%E5%8F%96js_html%E4%B8%AD%E9%9A%90%E8%97%8F%E7%9A%84uri%E5%92%8C%E6%8E%A5%E5%8F%A3/"><span aria-hidden="true">&larr;</span> Burp suite插件获取js/html中隐藏的uri和接口</a></li>
+      
+      
+        <li class="next"><a href="/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/Spring%20Boot%20Actuators%E9%85%8D%E7%BD%AE%E4%B8%8D%E5%BD%93%E5%AF%BC%E8%87%B4RCE%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/">Spring Boot Actuators配置不当导致RCE漏洞复现 <span aria-hidden="true">&rarr;</span></a></li>
+      
+    </ul>
+  </nav>
+
+  
+    
+  
+    <div id="disqus_thread" class="comment"></div>
+    <script>
+      var disqus_config = function(){
+        this.page.url = 'http://yoursite.com/%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/elasticsearch+kibana%E6%90%AD%E5%BB%BA%E9%85%8D%E7%BD%AE%E5%88%9D%E4%BD%93%E9%AA%8C/';
+        this.page.identifier = 'post-环境搭建/elasticsearch+kibana搭建配置初体验';
+      };
+      (function(){
+        var d = document, s = d.createElement('script');
+        s.src = 'https://JF.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+      })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" target="_blank" rel="external nofollow noopener noreferrer">comments powered by Disqus.</a></noscript>
+  
+
+  
+</article></section>
+      <aside class="col-md-3 sidebar">
+
+  <!--<div id="widget-search" class="widget widget-search">-->
+  <!--<div class="widget-content">-->
+    <!--<form class="form-inline" id="widget-search-form" onsubmit="return false;">-->
+      <!--<div class="form-group">-->
+        <!--<input type="text" class="form-control" id="widget-search-keyword" placeholder="" autocomplete="off" autofocus>-->
+      <!--</div>-->
+      <!--<div class="form-group">-->
+        <!--<button type="submit" class="btn btn-default">搜索</button>-->
+      <!--</div>-->
+    <!--</form>-->
+    <!--<div class="modal fade widget-search-results" id="widget-search-results" tabindex="-1" role="dialog" aria-labelledby="widget-search-results">-->
+      <!--<div class="modal-dialog" role="document">-->
+        <!--<div class="modal-content">-->
+          <!--<div class="modal-body"></div>-->
+        <!--</div>-->
+      <!--</div>-->
+    <!--</div>-->
+  <!--</div>-->
+<!--</div>-->
+
+  <div id="widget-toc" class="widget widget-toc">
+  <h3 class="widget-title">目录</h3>
+  <div class="widget-content">
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#0x00-环境准备"><span class="toc-number">1.</span> <span class="toc-text">0x00 环境准备</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x00-环境搭建"><span class="toc-number">2.</span> <span class="toc-text">0x00 环境搭建</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Docker"><span class="toc-number">2.1.</span> <span class="toc-text">1. Docker</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#docker代理"><span class="toc-number">2.1.1.</span> <span class="toc-text">docker代理</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-portainer"><span class="toc-number">2.2.</span> <span class="toc-text">2. portainer</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-elasticsearch"><span class="toc-number">2.3.</span> <span class="toc-text">3. elasticsearch</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#3-1-设置卷映射"><span class="toc-number">2.3.1.</span> <span class="toc-text">3.1 设置卷映射</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-2-设置端口映射"><span class="toc-number">2.3.2.</span> <span class="toc-text">3.2 设置端口映射</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-3-设置单机模式（参考hub）"><span class="toc-number">2.3.3.</span> <span class="toc-text">3.3 设置单机模式（参考hub）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-4-修改elasticsearch配置文件"><span class="toc-number">2.3.4.</span> <span class="toc-text">3.4 修改elasticsearch配置文件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-5-测试访问"><span class="toc-number">2.3.5.</span> <span class="toc-text">3.5 测试访问</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-6-安装中文ik分词插件"><span class="toc-number">2.3.6.</span> <span class="toc-text">3.6 安装中文ik分词插件</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-kibana搭建"><span class="toc-number">2.4.</span> <span class="toc-text">4. kibana搭建</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#4-1-修改配置"><span class="toc-number">2.4.1.</span> <span class="toc-text">4.1 修改配置</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-2-测试启动"><span class="toc-number">2.4.2.</span> <span class="toc-text">4.2 测试启动</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0X04-es常用语句"><span class="toc-number">3.</span> <span class="toc-text">0X04 es常用语句</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-新增索引"><span class="toc-number">3.1.</span> <span class="toc-text">1.1 新增索引</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-新增分词索引"><span class="toc-number">3.2.</span> <span class="toc-text">1.2 新增分词索引</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-查看索引"><span class="toc-number">3.3.</span> <span class="toc-text">1.3 查看索引</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-4-查看数据"><span class="toc-number">3.4.</span> <span class="toc-text">1.4 查看数据</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-5-搜索数据"><span class="toc-number">3.5.</span> <span class="toc-text">1.5 搜索数据</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-6-范围删除"><span class="toc-number">3.6.</span> <span class="toc-text">1.6 范围删除</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-7-group-by查询"><span class="toc-number">3.7.</span> <span class="toc-text">1.7 group by查询</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0X05-es常用语句"><span class="toc-number">4.</span> <span class="toc-text">0X05 es常用语句</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0X06-异常报错"><span class="toc-number">5.</span> <span class="toc-text">0X06 异常报错</span></a></li></ol>
+  </div>
+</div>
+
+  <div class="widget">
+    <h3 class="widget-title">友情链接</h3>
+    <ul>
+        <li><a href="http://blog.j0ck1e.com" title target="_blank" rel="external nofollow noopener noreferrer">蓝建</a></li>
+        <li><a href="https://www.3cac.com" title target="_blank" rel="external nofollow noopener noreferrer">卡</a></li>
+        <li><a href="http://blog.he4rt.me" title target="_blank" rel="external nofollow noopener noreferrer">he4rt</a></li>
+        <li><a href="https://sec.mrfan.xyz" title target="_blank" rel="external nofollow noopener noreferrer">饭先生</a></li>
+        <li><a href="https://www.waitalone.cn" title target="_blank" rel="external nofollow noopener noreferrer">独自等待</a></li>
+        <li><a href="https://www.ch1ng.com" title target="_blank" rel="external nofollow noopener noreferrer">金枪银矛小霸王</a></li>
+        <li><a href="https://www.scanfsec.com" title target="_blank" rel="external nofollow noopener noreferrer">scanf</a></li>
+    </ul>
+</div>
+</aside>
+      <div class="tools"><a href="javascript: void(0)" class="go-to-top" style="display: none;"><i class="fa fa-chevron-circle-up"></i></a></div>
+    </div>
+    <footer id="footer" class="footer">
+  <p>Powered by <a href="https://hexo.io/" target="_blank" rel="external nofollow noopener noreferrer">Hexo</a>. 勿忘初心.</p>
+</footer>
+  </div>
+  <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<!-- main scripts -->
+
+<script src="/js/main.js"></script>
+
+<!-- seo -->
+<script>
+
+</script>
+<!-- statistics -->
+<div class="hidden">
+  
+  
+  
+  
+  
+</div>
+</body>
+</html>

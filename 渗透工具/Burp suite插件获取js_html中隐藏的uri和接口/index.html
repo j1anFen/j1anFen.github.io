@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+<title>Burp suite插件获取js/html中隐藏的uri和接口 - JF &#39; blog</title>
+<meta name="keywords" content="hexo,hexone">
+<meta name="description" content="a theme based on bootstrap">
+<meta name="author" content="John Doe">
+<meta name="generator" content="hexo">
+<meta name="jsonContent" content="/content.json">
+
+<link rel="alternate" href="/atom.xml" title="JF ' blog">
+
+<!-- Bootstrap -->
+<link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+<link rel="stylesheet" href="/css/style.css">
+
+  <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+  <!--[if lt IE 9]>
+    <script src="https://cdn.bootcss.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <script src="https://cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+<link rel="alternate" href="/atom.xml" title="JF ' blog" type="application/atom+xml">
+</head>
+<body class="bg">
+  <div class="container">
+    <header id="header" class="header">
+    <div class="site-info hidden-xs">
+        <p class="title">JF &#39; blog</p>
+        <p></p>
+        <p class="lead">Information is beautiful</p>
+        <!--<p class="subtitle">Information is beautiful</p>-->
+        <!--<p class="author">by John Doe</p>-->
+    </div>
+    <div class="nav-box">
+        <nav id="navbar" class="navbar navbar-inverse">
+            <div class="navbar-inner">
+                <div class="container">
+                    <!-- Brand and toggle get grouped for better mobile display -->
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#hexone-navbar-collapse" aria-expanded="false">
+                            <span class="sr-only">Toggle navigation</span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a href="/" class="navbar-brand visible-xs-inline">JF &#39; blog</a>
+                    </div>
+
+                    <!-- Collect the nav links, forms, and other content for toggling -->
+                    <div class="collapse navbar-collapse">
+                        <ul class="nav navbar-nav">
+                            
+                                
+                                    <li class><a href="/">首页</a></li>
+                                
+                                <li class="divider-vertical"></li>
+                            
+                                
+                                    <li class><a href="/archives">归档</a></li>
+                                
+                                <li class="divider-vertical"></li>
+                            
+                                
+                                    <li class><a href="/about.html">关于</a></li>
+                                
+                                <li class="divider-vertical"></li>
+                            
+                                
+                                    <li class="active"><a>Burp suite插件获取js/html中隐藏的uri和接口</a></li>
+                                
+                                <li class="divider-vertical"></li>
+                            
+                        </ul>
+                    </div>
+                </div><!-- /.navbar-collapse -->
+            </div><!-- /.container-fluid -->
+        </nav>
+    </div>
+</header>
+    <div class="row">
+      <section id="main" class="col-md-9 main">
+<article id="post-渗透工具/Burp suite插件获取js_html中隐藏的uri和接口" class="article">
+  
+    <h1 class="title"><a href="/%E6%B8%97%E9%80%8F%E5%B7%A5%E5%85%B7/Burp%20suite%E6%8F%92%E4%BB%B6%E8%8E%B7%E5%8F%96js_html%E4%B8%AD%E9%9A%90%E8%97%8F%E7%9A%84uri%E5%92%8C%E6%8E%A5%E5%8F%A3/">Burp suite插件获取js/html中隐藏的uri和接口</a></h1>
+  
+    <p class="info">
+  <span class="info-item">日期: <a href="/archives/2019/09" class="date" title="23:18:24">2019-09-27</a></span>
+  <span class="info-item">更新: <a href="javascript: void(0)" class="date" title="22:40:44">2020-04-07</a></span>
+  <span class="info-item">分类: <a class="category-link" href="/categories/%E6%B8%97%E9%80%8F%E5%B7%A5%E5%85%B7/">渗透工具</a></span>
+</p>
+  
+    <div class="content">
+  <h1 id="burp-jspath"><a href="#burp-jspath" class="headerlink" title="burp_jspath"></a>burp_jspath</h1><p><strong><a href="https://github.com/j1anFen/burp_jspath" target="_blank" rel="external nofollow noopener noreferrer">https://github.com/j1anFen/burp_jspath</a></strong></p>
+<p>获取js文件和html中script标签内容中的接口，用于渗透中发现隐藏API，未授权访问等漏洞。</p>
+<p>插件使用了linkfinder探测js中路径的正则语句。</p>
+<h1 id="environment"><a href="#environment" class="headerlink" title="environment"></a>environment</h1><ul>
+<li>jpython 2.7</li>
+<li>BurpSuite Proxy</li>
+</ul>
+<h1 id="Features"><a href="#Features" class="headerlink" title="Features"></a>Features</h1><ul>
+<li>get js file path</li>
+<li>get html script tags path</li>
+<li>filter assets content</li>
+</ul>
+<h1 id="Usage"><a href="#Usage" class="headerlink" title="Usage"></a>Usage</h1><p>Import this extension of Burp Suite.</p>
+<p>Save to log file when there is more content.</p>
+<p><img src="/images/2019/09/4146295008.png" alt></p>
+<h1 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h1><p>regexp code</p>
+<p><a href="https://github.com/GerbenJavado/LinkFinder/blob/master/linkfinder.py#L29" target="_blank" rel="external nofollow noopener noreferrer">https://github.com/GerbenJavado/LinkFinder/blob/master/linkfinder.py#L29</a></p>
+
+</div>
+  
+    <div class="copyright">
+    <p>如无特殊说明，均为原创内容。转载请注明出处！</p>
+</div>
+  
+    
+  
+    
+  <nav aria-label="pager" class="nav-pager">
+    <ul class="pager">
+      
+        <li class="previous"><a href="/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95/UEditor%201.4.3.3%E9%AA%8C%E8%AF%81SSRF%E6%BC%8F%E6%B4%9E%E6%8F%90%E9%AB%98DNS%20rebinding%E6%88%90%E5%8A%9F%E7%8E%87/"><span aria-hidden="true">&larr;</span> UEditor 1.4.3.3验证SSRF漏洞提高DNS rebinding成功率</a></li>
+      
+      
+        <li class="next"><a href="/%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/elasticsearch+kibana%E6%90%AD%E5%BB%BA%E9%85%8D%E7%BD%AE%E5%88%9D%E4%BD%93%E9%AA%8C/">elasticsearch+kibana搭建配置初体验 <span aria-hidden="true">&rarr;</span></a></li>
+      
+    </ul>
+  </nav>
+
+  
+    
+  
+    <div id="disqus_thread" class="comment"></div>
+    <script>
+      var disqus_config = function(){
+        this.page.url = 'http://yoursite.com/%E6%B8%97%E9%80%8F%E5%B7%A5%E5%85%B7/Burp%20suite%E6%8F%92%E4%BB%B6%E8%8E%B7%E5%8F%96js_html%E4%B8%AD%E9%9A%90%E8%97%8F%E7%9A%84uri%E5%92%8C%E6%8E%A5%E5%8F%A3/';
+        this.page.identifier = 'post-渗透工具/Burp suite插件获取js_html中隐藏的uri和接口';
+      };
+      (function(){
+        var d = document, s = d.createElement('script');
+        s.src = 'https://JF.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+      })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" target="_blank" rel="external nofollow noopener noreferrer">comments powered by Disqus.</a></noscript>
+  
+
+  
+</article></section>
+      <aside class="col-md-3 sidebar">
+
+  <!--<div id="widget-search" class="widget widget-search">-->
+  <!--<div class="widget-content">-->
+    <!--<form class="form-inline" id="widget-search-form" onsubmit="return false;">-->
+      <!--<div class="form-group">-->
+        <!--<input type="text" class="form-control" id="widget-search-keyword" placeholder="" autocomplete="off" autofocus>-->
+      <!--</div>-->
+      <!--<div class="form-group">-->
+        <!--<button type="submit" class="btn btn-default">搜索</button>-->
+      <!--</div>-->
+    <!--</form>-->
+    <!--<div class="modal fade widget-search-results" id="widget-search-results" tabindex="-1" role="dialog" aria-labelledby="widget-search-results">-->
+      <!--<div class="modal-dialog" role="document">-->
+        <!--<div class="modal-content">-->
+          <!--<div class="modal-body"></div>-->
+        <!--</div>-->
+      <!--</div>-->
+    <!--</div>-->
+  <!--</div>-->
+<!--</div>-->
+
+  <div id="widget-toc" class="widget widget-toc">
+  <h3 class="widget-title">目录</h3>
+  <div class="widget-content">
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#burp-jspath"><span class="toc-number">1.</span> <span class="toc-text">burp_jspath</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#environment"><span class="toc-number">2.</span> <span class="toc-text">environment</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Features"><span class="toc-number">3.</span> <span class="toc-text">Features</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Usage"><span class="toc-number">4.</span> <span class="toc-text">Usage</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Reference"><span class="toc-number">5.</span> <span class="toc-text">Reference</span></a></li></ol>
+  </div>
+</div>
+
+  <div class="widget">
+    <h3 class="widget-title">友情链接</h3>
+    <ul>
+        <li><a href="http://blog.j0ck1e.com" title target="_blank" rel="external nofollow noopener noreferrer">蓝建</a></li>
+        <li><a href="https://www.3cac.com" title target="_blank" rel="external nofollow noopener noreferrer">卡</a></li>
+        <li><a href="http://blog.he4rt.me" title target="_blank" rel="external nofollow noopener noreferrer">he4rt</a></li>
+        <li><a href="https://sec.mrfan.xyz" title target="_blank" rel="external nofollow noopener noreferrer">饭先生</a></li>
+        <li><a href="https://www.waitalone.cn" title target="_blank" rel="external nofollow noopener noreferrer">独自等待</a></li>
+        <li><a href="https://www.ch1ng.com" title target="_blank" rel="external nofollow noopener noreferrer">金枪银矛小霸王</a></li>
+        <li><a href="https://www.scanfsec.com" title target="_blank" rel="external nofollow noopener noreferrer">scanf</a></li>
+    </ul>
+</div>
+</aside>
+      <div class="tools"><a href="javascript: void(0)" class="go-to-top" style="display: none;"><i class="fa fa-chevron-circle-up"></i></a></div>
+    </div>
+    <footer id="footer" class="footer">
+  <p>Powered by <a href="https://hexo.io/" target="_blank" rel="external nofollow noopener noreferrer">Hexo</a>. 勿忘初心.</p>
+</footer>
+  </div>
+  <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<!-- main scripts -->
+
+<script src="/js/main.js"></script>
+
+<!-- seo -->
+<script>
+
+</script>
+<!-- statistics -->
+<div class="hidden">
+  
+  
+  
+  
+  
+</div>
+</body>
+</html>
