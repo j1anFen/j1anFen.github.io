@@ -26,7 +26,7 @@
     <script src="https://cdn.bootcss.com/html5shiv/3.7.3/html5shiv.min.js"></script>
     <script src="https://cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
   <![endif]-->
-<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css"><link rel="alternate" href="/atom.xml" title="JF ' blog" type="application/atom+xml">
+<link rel="alternate" href="/atom.xml" title="JF ' blog" type="application/atom+xml">
 </head>
 <body class="bg">
   <div class="container">
@@ -92,13 +92,15 @@
   
     <p class="info">
   <span class="info-item">日期: <a href="/archives/2019/09" class="date" title="23:18:24">2019-09-27</a></span>
-  <span class="info-item">更新: <a href="javascript: void(0)" class="date" title="22:40:44">2020-04-07</a></span>
+  <span class="info-item">更新: <a href="javascript: void(0)" class="date" title="10:18:51">2020-04-08</a></span>
   <span class="info-item">分类: <a class="category-link" href="/categories/%E6%B8%97%E9%80%8F%E5%B7%A5%E5%85%B7/">渗透工具</a></span>
 </p>
   
     <div class="content">
-  <h1 id="burp-jspath"><a href="#burp-jspath" class="headerlink" title="burp_jspath"></a>burp_jspath</h1><p><strong><a href="https://github.com/j1anFen/burp_jspath" target="_blank" rel="external nofollow noopener noreferrer">https://github.com/j1anFen/burp_jspath</a></strong></p>
-<p>获取js文件和html中script标签内容中的接口，用于渗透中发现隐藏API，未授权访问等漏洞。</p>
+  <p><strong><a href="https://github.com/j1anFen/burp_jspath" target="_blank" rel="external nofollow noopener noreferrer">https://github.com/j1anFen/burp_jspath</a></strong></p>
+<a id="more"></a>
+
+<h1 id="burp-jspath"><a href="#burp-jspath" class="headerlink" title="burp_jspath"></a>burp_jspath</h1><p>获取js文件和html中script标签内容中的接口，用于渗透中发现隐藏API，未授权访问等漏洞。</p>
 <p>插件使用了linkfinder探测js中路径的正则语句。</p>
 <h1 id="environment"><a href="#environment" class="headerlink" title="environment"></a>environment</h1><ul>
 <li>jpython 2.7</li>
@@ -203,12 +205,27 @@
     <footer id="footer" class="footer">
   <p>Powered by <a href="https://hexo.io/" target="_blank" rel="external nofollow noopener noreferrer">Hexo</a>. 勿忘初心.</p>
   
+    <!-- Highlight.js -->
+    <link rel="stylesheet" href="//cdn.bootcss.com/highlight.js/9.2.0/styles/github.min.css">
+    <script src="//cdn.bootcss.com/highlight.js/9.2.0/highlight.min.js">
+    </script>
+    <script>
+      hljs.initHighlightingOnLoad();
+
+    </script>
+  
 </footer>
   </div>
   <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+<!--<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>-->
+
+<script src="/js/jquery.min.js"></script>
+
+
+<script src="/js/bootstrap.min.js"></script>
+
 <!-- Include all compiled plugins (below), or include individual files as needed -->
-<script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<!--<script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>-->
 <!-- main scripts -->
 
 <script src="/js/main.js"></script>
