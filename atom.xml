@@ -167,27 +167,6 @@
   </entry>
   
   <entry>
-    <title>Django编写后台系统之环境搭建</title>
-    <link href="http://yoursite.com/%E7%BC%96%E7%A8%8B%E8%AE%B0%E5%BD%95/python%20Django%E7%BC%96%E5%86%99%E5%90%8E%E5%8F%B0%E7%B3%BB%E7%BB%9F%E4%B9%8B%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/"/>
-    <id>http://yoursite.com/%E7%BC%96%E7%A8%8B%E8%AE%B0%E5%BD%95/python%20Django%E7%BC%96%E5%86%99%E5%90%8E%E5%8F%B0%E7%B3%BB%E7%BB%9F%E4%B9%8B%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/</id>
-    <published>2017-07-18T08:18:48.000Z</published>
-    <updated>2020-04-08T02:30:40.309Z</updated>
-    
-    <content type="html"><![CDATA[<p>Django开放源代码的Web应用框架，由Python语言编写,特性是大且全面</p><a id="more"></a><h1 id="0x00-Django编写后台系统之环境搭建"><a href="#0x00-Django编写后台系统之环境搭建" class="headerlink" title="[0x00] Django编写后台系统之环境搭建"></a>[0x00] Django编写后台系统之环境搭建</h1><p>我认为再构建django程序时对于<strong>数据库的理解</strong>特别重要,合理的设计表理解一对多,多对多表关系才能舒服的做出后台系统</p><h4 id="Django学习资料："><a href="#Django学习资料：" class="headerlink" title="Django学习资料："></a>Django学习资料：</h4><blockquote><p>1.8版本中文翻译文档<br> <a href="http://python.usyiyi.cn/translate/django_182/index.html" target="_blank" rel="external nofollow noopener noreferrer">http://python.usyiyi.cn/translate/django_182/index.html</a></p></blockquote><blockquote><p>1.11版本英文原版<br><a href="https://docs.djangoproject.com/en/1.11/" target="_blank" rel="external nofollow noopener noreferrer">https://docs.djangoproject.com/en/1.11/</a></p></blockquote><blockquote><p>python自强学堂(挺实用的)<br><a href="http://code.ziqiangxuetang.com/django/django-tutorial.html" target="_blank" rel="external nofollow noopener noreferrer">http://code.ziqiangxuetang.com/django/django-tutorial.html</a></p></blockquote><blockquote><p>github Django资源大全(推荐)<br><a href="https://github.com/haiiiiiyun/awesome-django-cn" target="_blank" rel="external nofollow noopener noreferrer">https://github.com/haiiiiiyun/awesome-django-cn</a></p></blockquote><h3 id="0x01-环境搭建"><a href="#0x01-环境搭建" class="headerlink" title="0x01 环境搭建"></a>0x01 环境搭建</h3><p>由于django对于版本依赖非常受限制,所以推荐使用</p><blockquote><p>编辑器:pycharm<br>环境:virtualenv<br>Django==1.9.8<br>django-xadmin<br>django-ckeditor<br>百度echarts图表自行编写app<br>都可以用pip安装</p></blockquote><p>执行命令:</p><blockquote><p>安装虚拟环境<br>pip install virtualenvwapper-win</p></blockquote><hr><blockquote><p>创建新环境<br>makevirtualenv mkvirtualenv test</p></blockquote><hr><blockquote><p>进入新环境<br>workon test<br>可用pip安装常规软件<br>(vulmanage)pip list<br>(vulmanage)pip install django==1.9.8<br>(vulmanage)pip install django-ckeditor<br>(vulmanage)pip install django-xadmin</p></blockquote><hr><p>django常用命令</p><blockquote><p>创建django项目<br>(vulmanage)django-admin startproject vulmanage</p></blockquote><hr><blockquote><p>创建django APP<br>(vulmanage)django-admin startapp vulinfo</p></blockquote><hr><blockquote><p>刷新数据库<br>(vulmanage)python manage.py makemigrations<br>(vulmanage)python manage.py migrate</p></blockquote><hr><blockquote><p>创建超级管理员<br>(vulmanage)python manage.py createsuperuser</p></blockquote><p>待补充…</p>]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;Django开放源代码的Web应用框架，由Python语言编写,特性是大且全面&lt;/p&gt;
-    
-    </summary>
-    
-    
-      <category term="编程记录" scheme="http://yoursite.com/categories/%E7%BC%96%E7%A8%8B%E8%AE%B0%E5%BD%95/"/>
-    
-    
-  </entry>
-  
-  <entry>
     <title>Django后台扩展之xadmin系统搭建和优化</title>
     <link href="http://yoursite.com/%E7%BC%96%E7%A8%8B%E8%AE%B0%E5%BD%95/python%20Django%E5%90%8E%E5%8F%B0%E6%89%A9%E5%B1%95%E4%B9%8Bxadmin%E7%B3%BB%E7%BB%9F%E6%90%AD%E5%BB%BA%E5%92%8C%E4%BC%98%E5%8C%96/"/>
     <id>http://yoursite.com/%E7%BC%96%E7%A8%8B%E8%AE%B0%E5%BD%95/python%20Django%E5%90%8E%E5%8F%B0%E6%89%A9%E5%B1%95%E4%B9%8Bxadmin%E7%B3%BB%E7%BB%9F%E6%90%AD%E5%BB%BA%E5%92%8C%E4%BC%98%E5%8C%96/</id>
@@ -199,6 +178,27 @@
     <summary type="html">
     
       &lt;p&gt;Django原生后台非常不友好,一般人的习惯是左右结构的系统,寻找了很久发现xadmin还是符合要求,搭建的时候要走一些坑&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="编程记录" scheme="http://yoursite.com/categories/%E7%BC%96%E7%A8%8B%E8%AE%B0%E5%BD%95/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>Django编写后台系统之环境搭建</title>
+    <link href="http://yoursite.com/%E7%BC%96%E7%A8%8B%E8%AE%B0%E5%BD%95/python%20Django%E7%BC%96%E5%86%99%E5%90%8E%E5%8F%B0%E7%B3%BB%E7%BB%9F%E4%B9%8B%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/"/>
+    <id>http://yoursite.com/%E7%BC%96%E7%A8%8B%E8%AE%B0%E5%BD%95/python%20Django%E7%BC%96%E5%86%99%E5%90%8E%E5%8F%B0%E7%B3%BB%E7%BB%9F%E4%B9%8B%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/</id>
+    <published>2017-07-18T08:18:48.000Z</published>
+    <updated>2020-04-08T02:30:40.309Z</updated>
+    
+    <content type="html"><![CDATA[<p>Django开放源代码的Web应用框架，由Python语言编写,特性是大且全面</p><a id="more"></a><h1 id="0x00-Django编写后台系统之环境搭建"><a href="#0x00-Django编写后台系统之环境搭建" class="headerlink" title="[0x00] Django编写后台系统之环境搭建"></a>[0x00] Django编写后台系统之环境搭建</h1><p>我认为再构建django程序时对于<strong>数据库的理解</strong>特别重要,合理的设计表理解一对多,多对多表关系才能舒服的做出后台系统</p><h4 id="Django学习资料："><a href="#Django学习资料：" class="headerlink" title="Django学习资料："></a>Django学习资料：</h4><blockquote><p>1.8版本中文翻译文档<br> <a href="http://python.usyiyi.cn/translate/django_182/index.html" target="_blank" rel="external nofollow noopener noreferrer">http://python.usyiyi.cn/translate/django_182/index.html</a></p></blockquote><blockquote><p>1.11版本英文原版<br><a href="https://docs.djangoproject.com/en/1.11/" target="_blank" rel="external nofollow noopener noreferrer">https://docs.djangoproject.com/en/1.11/</a></p></blockquote><blockquote><p>python自强学堂(挺实用的)<br><a href="http://code.ziqiangxuetang.com/django/django-tutorial.html" target="_blank" rel="external nofollow noopener noreferrer">http://code.ziqiangxuetang.com/django/django-tutorial.html</a></p></blockquote><blockquote><p>github Django资源大全(推荐)<br><a href="https://github.com/haiiiiiyun/awesome-django-cn" target="_blank" rel="external nofollow noopener noreferrer">https://github.com/haiiiiiyun/awesome-django-cn</a></p></blockquote><h3 id="0x01-环境搭建"><a href="#0x01-环境搭建" class="headerlink" title="0x01 环境搭建"></a>0x01 环境搭建</h3><p>由于django对于版本依赖非常受限制,所以推荐使用</p><blockquote><p>编辑器:pycharm<br>环境:virtualenv<br>Django==1.9.8<br>django-xadmin<br>django-ckeditor<br>百度echarts图表自行编写app<br>都可以用pip安装</p></blockquote><p>执行命令:</p><blockquote><p>安装虚拟环境<br>pip install virtualenvwapper-win</p></blockquote><hr><blockquote><p>创建新环境<br>makevirtualenv mkvirtualenv test</p></blockquote><hr><blockquote><p>进入新环境<br>workon test<br>可用pip安装常规软件<br>(vulmanage)pip list<br>(vulmanage)pip install django==1.9.8<br>(vulmanage)pip install django-ckeditor<br>(vulmanage)pip install django-xadmin</p></blockquote><hr><p>django常用命令</p><blockquote><p>创建django项目<br>(vulmanage)django-admin startproject vulmanage</p></blockquote><hr><blockquote><p>创建django APP<br>(vulmanage)django-admin startapp vulinfo</p></blockquote><hr><blockquote><p>刷新数据库<br>(vulmanage)python manage.py makemigrations<br>(vulmanage)python manage.py migrate</p></blockquote><hr><blockquote><p>创建超级管理员<br>(vulmanage)python manage.py createsuperuser</p></blockquote><p>待补充…</p>]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;Django开放源代码的Web应用框架，由Python语言编写,特性是大且全面&lt;/p&gt;
     
     </summary>
     
