@@ -272,22 +272,27 @@
 
   
     
-  
-    <div id="disqus_thread" class="comment"></div>
-    <script>
-      var disqus_config = function(){
-        this.page.url = 'http://yoursite.com/%E7%BD%91%E7%BB%9C%E5%B7%A5%E7%A8%8B/OSPF%E7%89%B9%E6%AE%8A%E5%8C%BA%E5%9F%9F%E5%92%8COSPF%E8%AE%A4%E8%AF%81%E6%96%B9%E5%BC%8F/';
-        this.page.identifier = 'post-网络工程/OSPF特殊区域和OSPF认证方式';
-      };
-      (function(){
-        var d = document, s = d.createElement('script');
-        s.src = 'https://JF.disqus.com/embed.js';
-        s.setAttribute('data-timestamp', +new Date());
-        (d.head || d.body).appendChild(s);
-      })();
-    </script>
-    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" target="_blank" rel="external nofollow noopener noreferrer">comments powered by Disqus.</a></noscript>
-  
+    
+        <div id="gitalk-container" style="padding: 0px 30px 0px 30px;"></div> 
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+<script type="text/javascript">
+
+if(true){
+	var gitalk = new Gitalk({
+  	clientID: 'a96ac60b74f29438f0c2',
+  	clientSecret: '58405bd2b50200a59c4a6de983919920b9204944',
+  	repo: 'j1anFen.github.io',
+  	owner: 'j1anFen',
+  	admin: ['j1anFen'],
+  	id: 'Mon Oct 24 2016 23:18:48 GMT+0800',
+  	distractionFreeMode: 'true'
+})
+gitalk.render('gitalk-container') 
+}
+</script>
+    
 
   
 </article></section>

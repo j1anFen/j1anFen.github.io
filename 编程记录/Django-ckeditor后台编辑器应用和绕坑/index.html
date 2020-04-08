@@ -161,22 +161,27 @@
 
   
     
-  
-    <div id="disqus_thread" class="comment"></div>
-    <script>
-      var disqus_config = function(){
-        this.page.url = 'http://yoursite.com/%E7%BC%96%E7%A8%8B%E8%AE%B0%E5%BD%95/Django-ckeditor%E5%90%8E%E5%8F%B0%E7%BC%96%E8%BE%91%E5%99%A8%E5%BA%94%E7%94%A8%E5%92%8C%E7%BB%95%E5%9D%91/';
-        this.page.identifier = 'post-编程记录/Django-ckeditor后台编辑器应用和绕坑';
-      };
-      (function(){
-        var d = document, s = d.createElement('script');
-        s.src = 'https://JF.disqus.com/embed.js';
-        s.setAttribute('data-timestamp', +new Date());
-        (d.head || d.body).appendChild(s);
-      })();
-    </script>
-    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" target="_blank" rel="external nofollow noopener noreferrer">comments powered by Disqus.</a></noscript>
-  
+    
+        <div id="gitalk-container" style="padding: 0px 30px 0px 30px;"></div> 
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+<script type="text/javascript">
+
+if(true){
+	var gitalk = new Gitalk({
+  	clientID: 'a96ac60b74f29438f0c2',
+  	clientSecret: '58405bd2b50200a59c4a6de983919920b9204944',
+  	repo: 'j1anFen.github.io',
+  	owner: 'j1anFen',
+  	admin: ['j1anFen'],
+  	id: 'Tue Jul 18 2017 16:17:48 GMT+0800',
+  	distractionFreeMode: 'true'
+})
+gitalk.render('gitalk-container') 
+}
+</script>
+    
 
   
 </article></section>
