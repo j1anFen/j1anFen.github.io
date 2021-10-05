@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+<title>【spanning-tree】生成树实例 - J1anFen &#39; blog</title>
+<meta name="keywords" content="hexo,hexone">
+<meta name="description" content="a theme based on bootstrap">
+<meta name="author" content="John Doe">
+<meta name="generator" content="hexo">
+<meta name="jsonContent" content="/content.json">
+
+<link rel="alternate" href="/atom.xml" title="J1anFen ' blog">
+
+<!-- Bootstrap -->
+<link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+<link rel="stylesheet" href="/css/style.css">
+
+  <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+  <!--[if lt IE 9]>
+    <script src="https://cdn.bootcss.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <script src="https://cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+<link rel="alternate" href="/atom.xml" title="J1anFen ' blog" type="application/atom+xml">
+</head>
+<body class="bg">
+  <div class="container">
+    <header id="header" class="header">
+    <div class="site-info hidden-xs">
+        <p class="title">J1anFen &#39; blog</p>
+        <p></p>
+        <p class="lead">Information is beautiful</p>
+        <!--<p class="subtitle">Information is beautiful</p>-->
+        <!--<p class="author">by John Doe</p>-->
+    </div>
+    <div class="nav-box">
+        <nav id="navbar" class="navbar navbar-inverse">
+            <div class="navbar-inner">
+                <div class="container">
+                    <!-- Brand and toggle get grouped for better mobile display -->
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#hexone-navbar-collapse" aria-expanded="false">
+                            <span class="sr-only">Toggle navigation</span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a href="/" class="navbar-brand visible-xs-inline">J1anFen &#39; blog</a>
+                    </div>
+
+                    <!-- Collect the nav links, forms, and other content for toggling -->
+                    <div class="collapse navbar-collapse">
+                        <ul class="nav navbar-nav">
+                            
+                                
+                                    <li class><a href="/">首页</a></li>
+                                
+                                <li class="divider-vertical"></li>
+                            
+                                
+                                    <li class><a href="/archives">归档</a></li>
+                                
+                                <li class="divider-vertical"></li>
+                            
+                                
+                                    <li class><a href="/about.html">关于</a></li>
+                                
+                                <li class="divider-vertical"></li>
+                            
+                                
+                                    <li class="active"><a>【spanning-tree】生成树实例</a></li>
+                                
+                                <li class="divider-vertical"></li>
+                            
+                        </ul>
+                    </div>
+                </div><!-- /.navbar-collapse -->
+            </div><!-- /.container-fluid -->
+        </nav>
+    </div>
+</header>
+    <div class="row">
+      <section id="main" class="col-md-9 main">
+<article id="post-网络工程/spanning-tree-生成树实例" class="article">
+  
+    <h1 class="title"><a href="/%E7%BD%91%E7%BB%9C%E5%B7%A5%E7%A8%8B/spanning-tree-%E7%94%9F%E6%88%90%E6%A0%91%E5%AE%9E%E4%BE%8B/">【spanning-tree】生成树实例</a></h1>
+  
+    <p class="info">
+  <span class="info-item">日期: <a href="/archives/2017/01" class="date" title="12:18:48">2017-01-09</a></span>
+  <span class="info-item">更新: <a href="javascript: void(0)" class="date" title="10:37:44">2020-04-08</a></span>
+  <span class="info-item">分类: <a class="category-link" href="/categories/%E7%BD%91%E7%BB%9C%E5%B7%A5%E7%A8%8B/">网络工程</a></span>
+</p>
+  
+    <div class="content">
+  <p>STP（IEEE802.1D生成树协议）</p>
+<a id="more"></a>
+
+<h1 id="【spanning-tree】生成树实例"><a href="#【spanning-tree】生成树实例" class="headerlink" title="【spanning-tree】生成树实例"></a>【spanning-tree】生成树实例</h1><p>STP（IEEE802.1D生成树协议）技术原理：</p>
+<p>维护一个树状的网络拓扑，当交换机发现拓扑中有环时，就会逻辑的阻塞一个或更多冗余端口来实现无环拓扑，当网络拓扑发生变化时，运行STP的交换机会自动重新配置他的端口以避免环路产生或连接丢失。</p>
+<p>STP算法分四个步骤：</p>
+<p><strong>步骤一：选举根网桥</strong></p>
+<p>判定对象：在所有运行STP协议的交换机上选举出一个唯一的根网桥。</p>
+<p>判定条件：BPDU数据帧中网桥ID值最小的交换机将成为根网桥（BPDU数据帧中网桥ID有8个字节，它是由2个字节的网桥优先级和6个字节的背板MAC组成的，其中网桥优先级的取值范围是0-65535，缺省值是32768）</p>
+<p>—在进行网桥ID比较时，先比较网桥优先级，优先级值小的为根网桥；当优先级值相等时，再比较背板MAC地址，MAC地址小的为根网桥。</p>
+<p><strong>步骤二：选举跟端口</strong></p>
+<p>判定对象：在所有非根网桥交换机上的不同端口之间选举出一个到根网桥最近的端口作为跟端口。</p>
+<p>判定条件：</p>
+<ul>
+<li><p>—1.<strong>端口</strong>到根网桥路径开销最小</p>
+<p>—2.发送方网桥ID最小</p>
+<p>—3.发送方端口ID最小（端口ID有16位，它是由8位端口优先级和8位端口编号组成的，其中端口优先级的取值范围是0-240，缺省值是128，可以修改，但必须是16的倍数）</p>
+</li>
+</ul>
+<p><strong>步骤三：选举指定端口</strong></p>
+<p>判定对象：在每一个物理网段的不同端口之间选举出一个指定端口。</p>
+<p>判定条件：</p>
+<ul>
+<li><p>—1.<strong>网桥</strong>到根网桥路径开销最小</p>
+<p>—2.发送方网桥ID最小</p>
+<p>—3.发送方端口ID最小</p>
+</li>
+</ul>
+<p><strong>步骤四：阻塞其它端口，形成无环拓扑</strong></p>
+<p>请看STP算法一实例：</p>
+<p>拓扑图</p>
+<p><img src="http://www.jianfensec.com/usr/uploads/spanning-tree.jpg" alt="请输入图片描述"></p>
+<p><strong>步骤一：选举根网桥</strong></p>
+<ul>
+<li>—比较四个交换机(SW1、SW2、SW3和SW4)的网桥ID,四个交换机的优先级都是32768，优先级相等，再比较背板MAC，显然SW1的背板MAC最小，所以SW1的网桥ID最小，SW1是根网桥。</li>
+</ul>
+<p><strong>步骤二：选举跟端口</strong></p>
+<p>—在SW2上</p>
+<ul>
+<li>端口到根网桥路径开销：0/1=19&lt;0/2=19+19,所以0/1号端口是SW2的根端口。</li>
+</ul>
+<p>—在SW3上</p>
+<ul>
+<li>端口到根网桥路径开销：0/3=19&lt;0/2=19+19,所以0/3号端口是SW3的根端口。</li>
+</ul>
+<p>—在SW4上</p>
+<ul>
+<li>端口到根网桥路径开销：0/1=19&lt;0/2=19+19,所以0/1号端口是SW4的根端口。</li>
+</ul>
+<p><strong>步骤三：选举指定端口</strong></p>
+<p>—在SW1-SW2的物理网段上</p>
+<ul>
+<li>SW1上的0/1号端口的网桥到根网桥的路径开销是0，而SW2上的0/1号端口的网桥到根网桥的路径开销是19，所以在SW1-SW2的物理网段上，SW1上的0/1号端口是指定端口。</li>
+</ul>
+<p>—在SW1—SW3的物理网段上</p>
+<ul>
+<li>SW1上的0/3号端口的网桥到根网桥的路径开销是0，而SW3上的0/3号端口的网桥到根网桥的路径开销是19，所以SW1—SW3的物理网段上，SW1上的0/3号端口是指定端口。</li>
+</ul>
+<p>—在SW1—SW4的物理网段上</p>
+<ul>
+<li>SW1上的0/2号端口的网桥到根网桥的路径开销是0，而SW4上的0/1号端口的网桥到根网桥的路径开销是19，所以在SW1-SW4的物理网段上，SW1上的0/2号端口是指定端口。</li>
+</ul>
+<p>—在SW2—SW3的物理网段上</p>
+<ul>
+<li>SW2上的0/2号端口和SW3上的0/2号端口的网桥到根网桥的路径开销都是19，再比较两端口的发送方网桥ID,SW2上的0/2号端口的发送方网桥是32768.000d.280c.b300,而SW3上的0/2号端口的发送方网桥是32768.000d.280b.b200,所以在SW2-SW3的物理网段上，SW2上的0/2号端口是指定端口。</li>
+</ul>
+<p>—在SW3—SW4的物理网段上</p>
+<ul>
+<li>SW3上的0/1号端口和SW4上的0/2号端口的网桥到根网桥的路径开销都是19，再比较两端口的发送方网桥ID，SW3上的0/1号端口的发送方网桥是32768.000d.280d.b100,而SW4上的0/2号端口的发送方网桥是32768.000d.280c.b300,所以在SW3-SW4的物理网段上，SW3上的0/1号端口是指定端口。</li>
+</ul>
+<p><strong>步骤四：阻塞端口</strong>（SW3上的0/2号端口和SW4上的0/2号端口）</p>
+<p>最后的STP生成拓扑图<br><img src="http://www.jianfensec.com/usr/uploads/spanning-tree-2.jpg" alt="请输入图片描述"></p>
+<p>结论：在根网桥上的所有端口都是指定端口，同一个交换机（除了根网桥）上的端口只能属于一种端口，不可能是根端口同时兼指定端口</p>
+<p>PS:<strong>最需要注意的是 根端口选举是根据 端口到根桥的cost，而指定端口选举是根据该网桥到根桥的cost</strong></p>
+
+</div>
+  
+    <div class="copyright">
+    <p>如无特殊说明，均为原创内容。转载请注明出处！</p>
+</div>
+  
+    
+  
+    
+  <nav aria-label="pager" class="nav-pager">
+    <ul class="pager">
+      
+        <li class="previous"><a href="/%E7%BD%91%E7%BB%9C%E5%B7%A5%E7%A8%8B/IPSEC%20VPN%E9%85%8D%E7%BD%AE%E7%9A%84%E5%A4%9A%E7%A7%8D%E6%96%B9%E6%B3%95/"><span aria-hidden="true">&larr;</span> IPSEC VPN配置的多种方法</a></li>
+      
+      
+        <li class="next"><a href="/%E7%BD%91%E7%BB%9C%E5%B7%A5%E7%A8%8B/OSPF%E7%89%B9%E6%AE%8A%E5%8C%BA%E5%9F%9F%E5%92%8COSPF%E8%AE%A4%E8%AF%81%E6%96%B9%E5%BC%8F/">【OSPF】特殊区域和认证方式 <span aria-hidden="true">&rarr;</span></a></li>
+      
+    </ul>
+  </nav>
+
+  
+    
+    
+
+  
+</article></section>
+      <aside class="col-md-3 sidebar">
+
+  <!--<div id="widget-search" class="widget widget-search">-->
+  <!--<div class="widget-content">-->
+    <!--<form class="form-inline" id="widget-search-form" onsubmit="return false;">-->
+      <!--<div class="form-group">-->
+        <!--<input type="text" class="form-control" id="widget-search-keyword" placeholder="" autocomplete="off" autofocus>-->
+      <!--</div>-->
+      <!--<div class="form-group">-->
+        <!--<button type="submit" class="btn btn-default">搜索</button>-->
+      <!--</div>-->
+    <!--</form>-->
+    <!--<div class="modal fade widget-search-results" id="widget-search-results" tabindex="-1" role="dialog" aria-labelledby="widget-search-results">-->
+      <!--<div class="modal-dialog" role="document">-->
+        <!--<div class="modal-content">-->
+          <!--<div class="modal-body"></div>-->
+        <!--</div>-->
+      <!--</div>-->
+    <!--</div>-->
+  <!--</div>-->
+<!--</div>-->
+
+  <div id="widget-toc" class="widget widget-toc">
+  <h3 class="widget-title">目录</h3>
+  <div class="widget-content">
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#【spanning-tree】生成树实例"><span class="toc-number">1.</span> <span class="toc-text">【spanning-tree】生成树实例</span></a></li></ol>
+  </div>
+</div>
+
+  <div class="widget">
+    <h3 class="widget-title">友情链接</h3>
+    <ul>
+        <li><a href="http://blog.happysec.cn" title target="_blank" rel="external nofollow noopener noreferrer">depy</a></li>
+        <li><a href="https://www.hedysx.com" title target="_blank" rel="external nofollow noopener noreferrer">hedysx</a></li>
+        <li><a href="https://www.3cac.com" title target="_blank" rel="external nofollow noopener noreferrer">卡</a></li>
+        <li><a href="http://blog.he4rt.me" title target="_blank" rel="external nofollow noopener noreferrer">he4rt</a></li>
+        <li><a href="https://sec.mrfan.xyz" title target="_blank" rel="external nofollow noopener noreferrer">饭先生</a></li>
+        <li><a href="https://www.waitalone.cn" title target="_blank" rel="external nofollow noopener noreferrer">独自等待</a></li>
+        <li><a href="https://www.ch1ng.com" title target="_blank" rel="external nofollow noopener noreferrer">金枪银矛小霸王</a></li>
+        <li><a href="https://www.scanfsec.com" title target="_blank" rel="external nofollow noopener noreferrer">scanf</a></li>
+    </ul>
+</div>
+</aside>
+      <div class="tools"><a href="javascript: void(0)" class="go-to-top" style="display: none;"><i class="fa fa-chevron-circle-up"></i></a></div>
+    </div>
+    <footer id="footer" class="footer">
+  <p>Powered by <a href="https://hexo.io/" target="_blank" rel="external nofollow noopener noreferrer">Hexo</a>. 勿忘初心.</p>
+  
+    <!-- Highlight.js -->
+    <link rel="stylesheet" href="//cdn.bootcss.com/highlight.js/9.2.0/styles/github.min.css">
+    <script src="//cdn.bootcss.com/highlight.js/9.2.0/highlight.min.js">
+    </script>
+    <script>
+      hljs.initHighlightingOnLoad();
+
+    </script>
+  
+</footer>
+  </div>
+  <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<!--<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>-->
+
+<script src="/js/jquery.min.js"></script>
+
+
+<script src="/js/bootstrap.min.js"></script>
+
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<!--<script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>-->
+<!-- main scripts -->
+
+<script src="/js/main.js"></script>
+
+<!-- seo -->
+<script>
+
+</script>
+<!-- statistics -->
+<div class="hidden">
+  
+  
+  
+  
+  
+</div>
+</body>
+</html>
